@@ -14,8 +14,7 @@ nonisolated struct KeychainError: LocalizedError {
 nonisolated enum AccountStore {
     private static let baseQuery: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        // Predates the app being called Sesame; kept so existing accounts stay readable.
-        kSecAttrService as String: "2FA",
+        kSecAttrService as String: "Sesame",
         kSecAttrAccount as String: "accounts",
     ]
 
@@ -43,7 +42,7 @@ nonisolated enum AccountStore {
         if status == errSecItemNotFound {
             var item = baseQuery
             item[kSecValueData as String] = data
-            item[kSecAttrLabel as String] = "2FA accounts"
+            item[kSecAttrLabel as String] = "Sesame accounts"
             status = SecItemAdd(item as CFDictionary, nil)
         }
         guard status == errSecSuccess else { throw KeychainError(status: status) }
