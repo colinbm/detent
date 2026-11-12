@@ -94,7 +94,17 @@ struct ContentView: View {
 
                 Spacer()
 
-                Button("Quit") { NSApplication.shared.terminate(nil) }
+                Menu {
+                    Button("Install Command Line Tool…") { model.installCommandLineTool() }
+                    Divider()
+                    Button("Quit Sesame") { NSApplication.shared.terminate(nil) }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .accessibilityLabel("More")
             }
             .padding(12)
         }

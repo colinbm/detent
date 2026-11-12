@@ -66,6 +66,38 @@ import Observation
         }
     }
 
+    /// Shows the terminal command that links the bundled `sesame` tool into /usr/local/bin.
+    /// The app is sandboxed and that folder belongs to root, so it cannot create the link itself.
+    func installCommandLineTool() {
+        let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/sesame")
+        let alert = NSAlert()
+
+        if FileManager.default.isExecutableFile(atPath: tool.path) {
+            let quoted = "'" + tool.path.replacingOccurrences(of: "'", with: "'\\''") + "'"
+            let command = "sudo mkdir -p /usr/local/bin && sudo ln -sf \(quoted) /usr/local/bin/sesame"
+            alert.messageText = "Install the sesame command"
+            alert.informativeText = """
+                Paste this into a terminal. It asks for your password, then links sesame into /usr/local/bin:
+
+                \(command)
+
+                Run it again if you move Sesame.
+                """
+            alert.addButton(withTitle: "Copy Command")
+            alert.addButton(withTitle: "Cancel")
+            NSApp.activate()
+            if alert.runModal() == .alertFirstButtonReturn {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(command, forType: .string)
+            }
+        } else {
+            alert.messageText = "Command line tool missing"
+            alert.informativeText = "This copy of Sesame does not contain the sesame tool."
+            NSApp.activate()
+            alert.runModal()
+        }
+    }
+
     func remove(_ account: Account) {
         do {
             try AccountStore.remove(id: account.id)
