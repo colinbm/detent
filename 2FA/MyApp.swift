@@ -1,9 +1,12 @@
 import SwiftUI
 
 @main struct MyApp: App {
+    @State private var model = AppModel()
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("2FA", systemImage: "lock.shield") {
+            ContentView(model: model)
         }
+        .menuBarExtraStyle(.window)
     }
 }
