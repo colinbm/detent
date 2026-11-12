@@ -2,11 +2,18 @@ import SwiftUI
 
 struct ContentView: View {
     @Bindable var model: AppModel
+    @State private var isEnteringKey = false
+    @State private var keyText = ""
+    @State private var nameText = ""
+
+    private var keyIsURI: Bool {
+        keyText.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("otpauth://")
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if model.accounts.isEmpty {
-                Text("No accounts yet. Put a 2FA setup QR code anywhere on screen, then scan.")
+                Text("No accounts yet. Put a 2FA setup QR code anywhere on screen and scan, or enter its key.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(12)
@@ -41,13 +48,49 @@ struct ContentView: View {
                     .padding(.top, 8)
             }
 
+            if isEnteringKey {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        TextField("Secret key or otpauth:// link", text: $keyText)
+                        Button("Paste") {
+                            keyText = NSPasteboard.general.string(forType: .string)?
+                                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        }
+                    }
+                    if !keyIsURI {
+                        TextField("Name, e.g. GitHub", text: $nameText)
+                    }
+                    HStack {
+                        Spacer()
+                        Button("Cancel") { endKeyEntry() }
+                        Button("Add") {
+                            if model.addPasted(keyText, name: nameText) { endKeyEntry() }
+                        }
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(keyText.isEmpty)
+                    }
+                }
+                .textFieldStyle(.roundedBorder)
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+            }
+
             HStack {
                 Button {
                     Task { await model.scanScreen() }
                 } label: {
-                    Label("Scan QR Code on Screen", systemImage: "qrcode.viewfinder")
+                    Label("Scan Screen", systemImage: "qrcode.viewfinder")
                 }
                 .disabled(model.isScanning)
+                .help("Find a 2FA QR code anywhere on screen")
+
+                Button {
+                    isEnteringKey = true
+                } label: {
+                    Label("Enter Key", systemImage: "keyboard")
+                }
+                .disabled(isEnteringKey)
+                .help("Paste a secret key or otpauth:// link")
 
                 Spacer()
 
@@ -57,6 +100,14 @@ struct ContentView: View {
         }
         .frame(width: 320)
         .onAppear { model.reload() }
+    }
+}
+
+extension ContentView {
+    private func endKeyEntry() {
+        isEnteringKey = false
+        keyText = ""
+        nameText = ""
     }
 }
 

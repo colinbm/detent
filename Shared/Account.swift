@@ -26,6 +26,7 @@ nonisolated enum AccountError: LocalizedError {
     case unsupportedType(String)
     case badSecret
     case badParameter(String)
+    case missingName
 
     var errorDescription: String? {
         switch self {
@@ -33,6 +34,7 @@ nonisolated enum AccountError: LocalizedError {
         case .unsupportedType(let type): "Only time-based (totp) codes are supported, not \"\(type)\"."
         case .badSecret: "The secret is missing or is not valid base32."
         case .badParameter(let name): "Invalid \"\(name)\" parameter."
+        case .missingName: "A name is needed for the account."
         }
     }
 }
@@ -91,6 +93,22 @@ nonisolated extension Account {
             digits: digits,
             period: period
         )
+    }
+}
+
+nonisolated extension Account {
+    /// Builds an account from text the user typed or pasted: either a full otpauth:// URI
+    /// (which carries its own name) or a bare base32 secret key, which needs `name`.
+    init(pasted string: String, name: String) throws {
+        let string = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        if string.lowercased().hasPrefix("otpauth://") {
+            try self.init(otpauthURI: string)
+            return
+        }
+        guard let secret = Base32.decode(string) else { throw AccountError.badSecret }
+        let name = name.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { throw AccountError.missingName }
+        self.init(issuer: "", name: name, secret: secret)
     }
 }
 

@@ -2,18 +2,19 @@ import Foundation
 import ImageIO
 
 let usage = """
-    usage: 2fa [-n] <name>          print the current code for the matching account
-           2fa list                 list accounts
-           2fa add <uri-or-image>   add an account from an otpauth:// URI or a QR code image file
-           2fa remove <name>        remove the matching account
+    usage: sesame [-n] <name>                print the current code for the matching account
+           sesame list                       list accounts
+           sesame add <uri-or-image>         add an account from an otpauth:// URI or a QR code image file
+           sesame add <name> <key>           add an account from a base32 secret key
+           sesame remove <name>              remove the matching account
 
     <name> matches the issuer, the account name or "issuer:name", ignoring case; failing an
     exact match, any unique substring will do. -n omits the trailing newline.
-    Use "2fa get <name>" for an account whose name clashes with a command.
+    Use "sesame get <name>" for an account whose name clashes with a command.
     """
 
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write(Data("2fa: \(message)\n".utf8))
+    FileHandle.standardError.write(Data("sesame: \(message)\n".utf8))
     exit(1)
 }
 
@@ -64,6 +65,11 @@ do {
             try AccountStore.add(account)
             print("added \(account.label)")
         }
+
+    case ("add", 3):
+        let account = try Account(pasted: args[2], name: args[1])
+        try AccountStore.add(account)
+        print("added \(account.label)")
 
     case ("remove", 2):
         let account = try resolve(args[1])

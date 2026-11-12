@@ -11,23 +11,23 @@
     ],
   },
   "files": [
-    { "kind": "folder", "path": "2FA", "target-membership": [ "2FA" ] },
-    { "kind": "folder", "path": "2fa-cli", "target-membership": [ "2fa-cli" ] },
-    { "kind": "folder", "path": "Shared", "target-membership": [ "2FA", "2fa-cli" ] },
+    { "kind": "folder", "path": "Sesame", "target-membership": [ "Sesame" ] },
+    { "kind": "folder", "path": "sesame-cli", "target-membership": [ "sesame-cli" ] },
+    { "kind": "folder", "path": "Shared", "target-membership": [ "Sesame", "sesame-cli" ] },
     {
       "kind": "group",
       "name": "Products",
       "children": [
-        { "path": "<PRODUCTS>/2FA.app", "id": "000000000000000000000120", "type": "wrapper.application", "index": false },
-        { "path": "<PRODUCTS>/2fa", "id": "000000000000000000000121", "type": "compiled.mach-o.executable", "index": false },
+        { "path": "<PRODUCTS>/Sesame.app", "id": "000000000000000000000120", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/sesame", "id": "000000000000000000000121", "type": "compiled.mach-o.executable", "index": false },
       ],
     },
   ],
   "targets": [
     {
-      "name": "2FA",
+      "name": "Sesame",
       "id": "000000000000000100000000",
-      "product": "Products/2FA.app",
+      "product": "Products/Sesame.app",
       "product-type": "application",
       "build-phases": [
         "compile-sources",
@@ -58,9 +58,9 @@
       },
     },
     {
-      "name": "2fa-cli",
+      "name": "sesame-cli",
       "id": "000000000000000200000000",
-      "product": "Products/2fa",
+      "product": "Products/sesame",
       "product-type": "tool",
       "build-phases": [
         "compile-sources",
@@ -68,7 +68,7 @@
       ],
       "build-settings": {
         "CODE_SIGN_STYLE": "Automatic",
-        "PRODUCT_NAME": "2fa",
+        "PRODUCT_NAME": "sesame",
         "SDKROOT": "auto",
         "SUPPORTED_PLATFORMS": "macosx",
         "SWIFT_APPROACHABLE_CONCURRENCY": "YES",

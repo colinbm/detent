@@ -25,7 +25,7 @@ import Observation
         } catch {
             message = CGPreflightScreenCaptureAccess()
                 ? error.localizedDescription
-                : "Allow 2FA under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again."
+                : "Allow Sesame under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again."
             return
         }
 
@@ -50,6 +50,20 @@ import Observation
         }
         reload()
         message = failure ?? "Added \(added.joined(separator: ", "))."
+    }
+
+    /// Adds an account from a pasted otpauth:// URI or base32 secret key. Returns whether it worked.
+    func addPasted(_ string: String, name: String) -> Bool {
+        do {
+            let account = try Account(pasted: string, name: name)
+            try AccountStore.add(account)
+            reload()
+            message = "Added \(account.label)."
+            return true
+        } catch {
+            message = error.localizedDescription
+            return false
+        }
     }
 
     func remove(_ account: Account) {

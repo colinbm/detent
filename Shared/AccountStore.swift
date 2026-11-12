@@ -14,6 +14,7 @@ nonisolated struct KeychainError: LocalizedError {
 nonisolated enum AccountStore {
     private static let baseQuery: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
+        // Predates the app being called Sesame; kept so existing accounts stay readable.
         kSecAttrService as String: "2FA",
         kSecAttrAccount as String: "accounts",
     ]
