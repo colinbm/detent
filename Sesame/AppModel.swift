@@ -4,7 +4,6 @@ import ServiceManagement
 
 @Observable final class AppModel {
     var accounts: [Account] = []
-    var message: String?
     var isScanning = false
 
     /// Whether iCloud Keychain is the primary store. When it is, the local keychain item is a
@@ -18,12 +17,27 @@ import ServiceManagement
         Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 guard let self, self.syncEnabled else { return }
-                self.reload()
+                self.reload(reportingFailure: false)
             }
         }
     }
 
-    func reload() {
+    /// Shows a failure in an alert. Deferred a tick so the modal loop never starts inside a
+    /// SwiftUI view update.
+    private func report(_ title: String, _ detail: String) {
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = title
+            alert.informativeText = detail
+            NSApp.activate()
+            alert.runModal()
+        }
+    }
+
+    /// `reportingFailure` is off for the background refresh, which would otherwise raise the
+    /// same alert every few minutes.
+    func reload(reportingFailure: Bool = true) {
         do {
             let local = try AccountStore.load()
             guard syncEnabled else {
@@ -35,7 +49,7 @@ import ServiceManagement
             if merged != local { try AccountStore.save(merged) }
             accounts = merged
         } catch {
-            message = error.localizedDescription
+            if reportingFailure { report("Accounts could not be loaded", error.localizedDescription) }
         }
     }
 
@@ -61,12 +75,9 @@ import ServiceManagement
                 // This also drops local duplicates and picks up any numbered names.
                 try AccountStore.save(CloudStore.load().accounts)
             } catch {
-                message = "iCloud sync could not be turned on. \(error.localizedDescription)"
+                report("iCloud sync could not be turned on", error.localizedDescription)
                 return
             }
-            message = "Syncing with iCloud Keychain."
-        } else {
-            message = "iCloud sync is off. Accounts stay on this Mac and in iCloud."
         }
         syncEnabled = enabled
         UserDefaults.standard.set(enabled, forKey: "iCloudSync")
@@ -81,7 +92,7 @@ import ServiceManagement
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            message = error.localizedDescription
+            report("Launch at Login could not be changed", error.localizedDescription)
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
@@ -95,46 +106,44 @@ import ServiceManagement
         do {
             payloads = try await ScreenScanner.qrPayloads()
         } catch {
-            message = CGPreflightScreenCaptureAccess()
+            report("The screen could not be scanned", CGPreflightScreenCaptureAccess()
                 ? error.localizedDescription
-                : "Allow Sesame under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again."
+                : "Allow Sesame under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again.")
             return
         }
 
         let uris = payloads.filter { $0.lowercased().hasPrefix("otpauth://") }
         guard !uris.isEmpty else {
-            message = payloads.isEmpty
+            report("No account added", payloads.isEmpty
                 ? "No QR code found on screen."
-                : "The QR code on screen is not a 2FA setup code."
+                : "The QR code on screen is not a 2FA setup code.")
             return
         }
 
-        var added: [String] = []
         var failure: String?
         for uri in uris {
             do {
                 let account = try Account(otpauthURI: uri)
                 try store(account)
-                added.append(account.label)
             } catch {
                 failure = error.localizedDescription
             }
         }
         reload()
-        message = failure ?? "Added \(added.joined(separator: ", "))."
+        if let failure { report("An account could not be added", failure) }
     }
 
-    /// Adds an account from a pasted otpauth:// URI or base32 secret key. Returns whether it worked.
-    func addPasted(_ string: String, name: String) -> Bool {
+    /// Adds an account from a pasted otpauth:// URI or base32 secret key. Returns why it failed,
+    /// or nil if it worked. The key form shows the reason itself: an alert would close the menu
+    /// bar window when dismissed, taking the form with it.
+    func addPasted(_ string: String, name: String) -> String? {
         do {
             let account = try Account(pasted: string, name: name)
             try store(account)
             reload()
-            message = "Added \(account.label)."
-            return true
+            return nil
         } catch {
-            message = error.localizedDescription
-            return false
+            return error.localizedDescription
         }
     }
 
@@ -173,7 +182,7 @@ import ServiceManagement
     /// Writes every account to a passphrase-encrypted file the user chooses.
     func exportAccounts() {
         guard !accounts.isEmpty else {
-            message = "There are no accounts to export."
+            report("Nothing to export", "There are no accounts to export.")
             return
         }
         guard let passphrase = askPassphrase(
@@ -190,9 +199,8 @@ import ServiceManagement
 
         do {
             try Backup.encrypt(accounts, passphrase: passphrase).write(to: url, options: .atomic)
-            message = "Exported \(accounts.count) account\(accounts.count == 1 ? "" : "s")."
         } catch {
-            message = error.localizedDescription
+            report("The backup could not be saved", error.localizedDescription)
         }
     }
 
@@ -213,9 +221,8 @@ import ServiceManagement
             let imported = try Backup.decrypt(Data(contentsOf: url), passphrase: passphrase)
             for account in imported { try store(account) }
             reload()
-            message = "Imported \(imported.count) account\(imported.count == 1 ? "" : "s")."
         } catch {
-            message = error.localizedDescription
+            report("The backup could not be imported", error.localizedDescription)
         }
     }
 
@@ -245,11 +252,11 @@ import ServiceManagement
 
         let passphrase = first.stringValue
         if passphrase.isEmpty {
-            message = "The passphrase cannot be empty."
+            report("No passphrase entered", "The passphrase cannot be empty.")
             return nil
         }
         if confirm && passphrase != second.stringValue {
-            message = "The passphrases did not match."
+            report("Passphrases did not match", "Enter the same passphrase in both fields.")
             return nil
         }
         return passphrase
@@ -259,9 +266,8 @@ import ServiceManagement
         do {
             if syncEnabled { try CloudStore.remove(id: account.id) }
             try AccountStore.remove(id: account.id)
-            message = nil
         } catch {
-            message = error.localizedDescription
+            report("The account could not be deleted", error.localizedDescription)
         }
         reload()
     }
@@ -269,6 +275,5 @@ import ServiceManagement
     func copyCode(for account: Account) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(account.code(), forType: .string)
-        message = "Copied code for \(account.label)."
     }
 }

@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var isEnteringKey = false
     @State private var keyText = ""
     @State private var nameText = ""
+    @State private var keyError: String?
 
     private var keyIsURI: Bool {
         keyText.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix("otpauth://")
@@ -39,15 +40,6 @@ struct ContentView: View {
 
             Divider()
 
-            if let message = model.message {
-                Text(message)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 8)
-            }
-
             if isEnteringKey {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -60,17 +52,25 @@ struct ContentView: View {
                     if !keyIsURI {
                         TextField("Name, e.g. GitHub", text: $nameText)
                     }
+                    if let keyError {
+                        Text(keyError)
+                            .font(.callout)
+                            .foregroundStyle(.red)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     HStack {
                         Spacer()
                         Button("Cancel") { endKeyEntry() }
                         Button("Add") {
-                            if model.addPasted(keyText, name: nameText) { endKeyEntry() }
+                            keyError = model.addPasted(keyText, name: nameText)
+                            if keyError == nil { endKeyEntry() }
                         }
                         .keyboardShortcut(.defaultAction)
                         .disabled(keyText.isEmpty)
                     }
                 }
                 .textFieldStyle(.roundedBorder)
+                .onChange(of: keyText) { keyError = nil }
                 .padding(.horizontal, 12)
                 .padding(.top, 10)
             }
@@ -126,6 +126,7 @@ extension ContentView {
         isEnteringKey = false
         keyText = ""
         nameText = ""
+        keyError = nil
     }
 }
 
