@@ -1,16 +1,12 @@
 import Foundation
-import ImageIO
 
 let usage = """
-    usage: sesame [-n] <name>                print the current code for the matching account
-           sesame list                       list accounts
-           sesame add <uri-or-image>         add an account from an otpauth:// URI or a QR code image file
-           sesame add <name> <key>           add an account from a base32 secret key
-           sesame remove <name>              remove the matching account
+    usage: sesame [-n] <name>   print the current code for the matching account
+           sesame list          list accounts
 
     <name> matches the issuer, the account name or "issuer:name", ignoring case; failing an
     exact match, any unique substring will do. -n omits the trailing newline.
-    Use "sesame get <name>" for an account whose name clashes with a command.
+    Use "sesame get <name>" for an account called "list". Accounts are managed in the Sesame app.
     """
 
 func fail(_ message: String) -> Never {
@@ -26,13 +22,6 @@ func resolve(_ query: String) throws -> Account {
     case 0: fail("no account matches \"\(query)\"")
     default: fail("\"\(query)\" is ambiguous: " + matches.map(\.label).joined(separator: ", "))
     }
-}
-
-func otpauthURIs(inImageAt path: String) throws -> [String] {
-    guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
-          let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
-    else { fail("cannot read image \(path)") }
-    return try QRDecoder.payloads(in: image).filter { $0.lowercased().hasPrefix("otpauth://") }
 }
 
 func printCode(for query: String) {
@@ -55,26 +44,6 @@ do {
     switch (args.first, args.count) {
     case ("list", 1):
         for account in try AccountStore.load() { print(account.label) }
-
-    case ("add", 2):
-        let source = args[1]
-        let uris = source.lowercased().hasPrefix("otpauth://") ? [source] : try otpauthURIs(inImageAt: source)
-        if uris.isEmpty { fail("no 2FA QR code found in \(source)") }
-        for uri in uris {
-            let account = try Account(otpauthURI: uri)
-            try AccountStore.add(account)
-            print("added \(account.label)")
-        }
-
-    case ("add", 3):
-        let account = try Account(pasted: args[2], name: args[1])
-        try AccountStore.add(account)
-        print("added \(account.label)")
-
-    case ("remove", 2):
-        let account = try resolve(args[1])
-        try AccountStore.remove(id: account.id)
-        print("removed \(account.label)")
 
     case ("get", 2):
         printCode(for: args[1])

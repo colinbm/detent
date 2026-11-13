@@ -95,6 +95,14 @@ struct ContentView: View {
                 Spacer()
 
                 Menu {
+                    Toggle("Sync with iCloud Keychain", isOn: Binding(
+                        get: { model.syncEnabled }, set: { model.setSync($0) }))
+                    Toggle("Launch at Login", isOn: Binding(
+                        get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
+                    Divider()
+                    Button("Export Accounts…") { model.exportAccounts() }
+                    Button("Import Accounts…") { model.importAccounts() }
+                    Divider()
                     Button("Install Command Line Tool…") { model.installCommandLineTool() }
                     Divider()
                     Button("Quit Sesame") { NSApplication.shared.terminate(nil) }

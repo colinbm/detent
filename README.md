@@ -8,6 +8,7 @@ A two-factor authentication app for the macOS menu bar, with a command line tool
 - **Or paste.** Add an account from an `otpauth://` link or the bare secret key.
 - **Live codes.** Each account shows its current code and a countdown; click to copy.
 - **`sesame` command.** `sesame github` prints the current code for the matching account.
+- **iCloud sync and backups.** Optionally keep accounts in iCloud Keychain, and export them to an encrypted file.
 
 ## Install
 
@@ -22,16 +23,15 @@ The first scan asks for Screen Recording permission: allow Sesame under System S
 The tool ships inside the app. Choose **Install Command Line Tool…** from the **…** menu to copy a command that links it into `/usr/local/bin`, then paste that into a terminal.
 
 ```
-sesame <name>               print the current code for the matching account
-sesame list                 list accounts
-sesame add <uri-or-image>   add an account from an otpauth:// URI or a QR code image file
-sesame add <name> <key>     add an account from a base32 secret key
-sesame remove <name>        remove the matching account
+sesame <name>   print the current code for the matching account
+sesame list     list accounts
 ```
+
+Accounts are added and removed in the app.
 
 `<name>` matches the issuer, the account name or `issuer:name`, ignoring case. Failing an exact match, any unique substring will do. `-n` omits the trailing newline.
 
-The first time the tool reads accounts added by the app (or the other way round), macOS asks for your login keychain password. Choose **Always Allow**.
+The first time the tool reads the accounts, macOS asks for your login keychain password. Choose **Always Allow**.
 
 ### Entering codes automatically in iTerm
 
@@ -47,7 +47,19 @@ The tool's output is typed into the session, and the trailing newline submits it
 
 ## Where secrets are stored
 
-Accounts live in a single item, "Sesame accounts", in your login keychain. They stay on this Mac: they are not synced through iCloud, so keep each site's recovery codes.
+By default, accounts live in a single item, "Sesame accounts", in your login keychain. They stay on this Mac.
+
+### iCloud sync
+
+Turn on **Sync with iCloud Keychain** in the **…** menu to keep accounts in iCloud Keychain instead, end-to-end encrypted by Apple and shared with your other Macs running Sesame. It needs iCloud Keychain switched on in System Settings.
+
+Turning it on never loses anything already on the Mac: accounts only on this Mac are uploaded, and if one shares an issuer and name with a different account in iCloud, both are kept and the local one gets a numbered name such as "me (2)". Deleting an account leaves a deletion record in iCloud, so other devices remove it too rather than mistaking it for one that has not synced yet.
+
+The app then keeps the local keychain item as a copy, because the `sesame` tool can only read that. The copy is refreshed whenever the app is opened and every few minutes while it runs, so turn on **Launch at Login** to keep the tool up to date with accounts added on other devices.
+
+### Backups
+
+**Export Accounts…** writes every account to a file encrypted with a passphrase you choose (AES-256-GCM, key derived with PBKDF2). **Import Accounts…** reads one back. The passphrase cannot be recovered, so keep it somewhere safe.
 
 Only time-based (TOTP) codes are supported.
 

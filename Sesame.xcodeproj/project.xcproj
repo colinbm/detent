@@ -29,6 +29,9 @@
       "id": "000000000000000100000000",
       "product": "Products/Sesame.app",
       "product-type": "application",
+      "dependencies": [
+        "sesame-cli",
+      ],
       "build-phases": [
         "compile-sources",
         "frameworks",
@@ -40,16 +43,14 @@
           "relative-path": "Contents/Helpers",
         },
       ],
-      "dependencies": [
-        "sesame-cli",
-      ],
       "build-settings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+        "CODE_SIGN_ENTITLEMENTS": "Config/Sesame.entitlements",
         "CODE_SIGN_STYLE": "Automatic",
         "CURRENT_PROJECT_VERSION": "4",
         "ENABLE_APP_SANDBOX": "YES",
         "ENABLE_PREVIEWS": "YES",
-        "ENABLE_USER_SELECTED_FILES": "readonly",
+        "ENABLE_USER_SELECTED_FILES": "readwrite",
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.utilities",
         "INFOPLIST_KEY_LSUIElement": "YES",
@@ -67,8 +68,7 @@
         "SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY": "YES",
         "SWIFT_VERSION": "5.0",
       },
-    },
-    {
+    }, {
       "name": "sesame-cli",
       "id": "000000000000000200000000",
       "product": "Products/sesame",
@@ -125,8 +125,8 @@
     "COPY_PHASE_STRIP": "NO",
     "DEAD_CODE_STRIPPING": "YES",
     "DEBUG_INFORMATION_FORMAT[config=Debug]": "dwarf",
-    "DEVELOPMENT_TEAM": "3N4984X523",
     "DEBUG_INFORMATION_FORMAT[config=Release]": "dwarf-with-dsym",
+    "DEVELOPMENT_TEAM": "3N4984X523",
     "DRIVERKIT_DEPLOYMENT_TARGET": "27.2",
     "ENABLE_HARDENED_RUNTIME": "YES",
     "ENABLE_NS_ASSERTIONS[config=Release]": "NO",
