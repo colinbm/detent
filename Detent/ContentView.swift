@@ -107,6 +107,9 @@ struct ContentView: View {
                     Divider()
                     Button("Install Command Line Tool…") { model.installCommandLineTool() }
                     Button("Set Up Chrome Extension…") { model.setUpChromeExtension() }
+                    if #available(macOS 15.0, *) {
+                        Button("AutoFill Settings…") { model.setUpAutoFill() }
+                    }
                     Divider()
                     Button("Quit Detent") { NSApplication.shared.terminate(nil) }
                 } label: {

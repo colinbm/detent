@@ -31,47 +31,75 @@ struct AccountPicker: View {
     }
 
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            TimelineView(.periodic(from: .now, by: 1)) { timeline in
-                List {
-                    if !suggested.isEmpty {
-                        Section {
-                            rows(suggested, at: timeline.date)
-                        } header: {
-                            Text("Suggested")
-                        } footer: {
-                            if let site, suggested.contains(where: { !$0.matches(host: site) }) {
-                                Text("Detent remembers the account you choose for \(site) and offers it above the keyboard next time.")
-                            }
-                        }
-                    }
-                    if !others.isEmpty {
-                        Section {
-                            rows(others, at: timeline.date)
-                        } header: {
-                            Text(suggested.isEmpty ? "Accounts" : "Other Accounts")
-                        } footer: {
-                            if let site, suggested.isEmpty {
-                                Text("Detent remembers the account you choose for \(site) and offers it above the keyboard next time.")
-                            }
-                        }
+            list
+                .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search accounts")
+                .navigationTitle(site ?? "Detent")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel", action: cancel)
                     }
                 }
-                .overlay {
-                    if accounts.isEmpty {
-                        ContentUnavailableView("No Accounts", systemImage: "lock.rotation",
-                                               description: Text("Add accounts in the Detent app."))
-                    } else if suggested.isEmpty && others.isEmpty {
-                        ContentUnavailableView.search(text: search)
+        }
+        #else
+        VStack(spacing: 0) {
+            HStack {
+                Text(site ?? "Detent")
+                    .font(.headline)
+                    .lineLimit(1)
+                Spacer()
+                TextField("Search accounts", text: $search)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 180)
+            }
+            .padding(12)
+            list
+            Divider()
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel, action: cancel)
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(12)
+        }
+        .frame(minWidth: 380, minHeight: 420)
+        #endif
+    }
+
+    private var hint: Text? {
+        site.map { Text("Detent remembers the account you choose for \($0) and offers it straight away next time.") }
+    }
+
+    private var list: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+            List {
+                if !suggested.isEmpty {
+                    Section {
+                        rows(suggested, at: timeline.date)
+                    } header: {
+                        Text("Suggested")
+                    } footer: {
+                        if let site, suggested.contains(where: { !$0.matches(host: site) }) { hint }
+                    }
+                }
+                if !others.isEmpty {
+                    Section {
+                        rows(others, at: timeline.date)
+                    } header: {
+                        Text(suggested.isEmpty ? "Accounts" : "Other Accounts")
+                    } footer: {
+                        if suggested.isEmpty { hint }
                     }
                 }
             }
-            .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search accounts")
-            .navigationTitle(site ?? "Detent")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: cancel)
+            .overlay {
+                if accounts.isEmpty {
+                    ContentUnavailableView("No Accounts", systemImage: "lock.rotation",
+                                           description: Text("Add accounts in the Detent app."))
+                } else if suggested.isEmpty && others.isEmpty {
+                    ContentUnavailableView.search(text: search)
                 }
             }
         }

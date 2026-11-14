@@ -23,6 +23,18 @@ nonisolated enum SyncMerge {
         return sorted(merged + localOnly)
     }
 
+    /// `accounts` with the site changes `other` holds for the same accounts, such as those the
+    /// Mac's AutoFill extension recorded in its copy. Accounts only in `other` are ignored.
+    static func addingSites(from other: [Account], to accounts: [Account]) -> [Account] {
+        let otherByID = Dictionary(other.map { ($0.id, $0) }) { first, _ in first }
+        return accounts.map { account in
+            guard let theirs = otherByID[account.id] else { return account }
+            var account = account
+            account.sites = SiteRecord.merge(account.sites, theirs.sites)
+            return account
+        }
+    }
+
     /// The merged accounts with site changes iCloud's copy lacks, and so need uploading.
     static func newerSites(merged: [Account], cloud: [Account]) -> [Account] {
         let cloudByID = Dictionary(cloud.map { ($0.id, $0) }) { first, _ in first }

@@ -73,6 +73,10 @@ The Detent iOS app shows the same accounts as the Mac when **Sync with iCloud Ke
 
 Turn on Detent in Settings › General › AutoFill & Passwords (iOS 18 or later). When a page or app asks for a verification code, tap the field, choose **AutoFill** › **Passwords** and pick the account. Detent remembers which site you picked it for, and from then on offers that account's code above the keyboard there in one tap.
 
+### AutoFill on the Mac
+
+On macOS 15 or later, choose **AutoFill Settings…** from the **…** menu to turn on Detent as a verification code provider (it is under System Settings › General › AutoFill & Passwords). It works like the iPhone's: Safari and other apps offer codes for the sites Detent knows, and picking an account from the AutoFill menu teaches it the site. It works whether or not iCloud sync is on: the app keeps a copy of the accounts that the extension can read, in the keychain group they share, and takes back any sites the extension learns.
+
 ### Sites
 
 Each account keeps a list of the sites it signs in to, which is what AutoFill uses to suggest it. Sites are added when:
@@ -80,7 +84,7 @@ Each account keeps a list of the sites it signs in to, which is what AutoFill us
 - the Mac scans the QR code from a browser window. Detent asks Safari, Chrome, Brave, Edge, Vivaldi or Arc for the page's address; macOS asks once per browser whether Detent may do that.
 - the setup code's issuer is itself a domain, such as "Amazon.com".
 - you set up the Chrome extension on a site.
-- you pick the account from AutoFill on the iPhone or iPad.
+- you pick the account from AutoFill on the Mac, iPhone or iPad.
 
 To change them, swipe right on an account in the iOS app and tap **Sites**, or choose **Edit Sites…** from an account's context menu on the Mac. Sites are shared through iCloud Keychain like the rest of the account, and the latest change to each site wins, so a site removed on one device stays removed everywhere until someone adds it back. When the Chrome extension records a site, the `detent` tool tells the Mac app, which copies it to iCloud straight away.
 

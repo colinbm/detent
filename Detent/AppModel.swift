@@ -1,4 +1,5 @@
 import AppKit
+import AuthenticationServices
 import Observation
 import ServiceManagement
 
@@ -46,21 +47,35 @@ import ServiceManagement
     /// same alert every few minutes.
     func reload(reportingFailure: Bool = true) {
         do {
-            let local = try AccountStore.load()
-            guard syncEnabled else {
-                accounts = local
-                return
+            let stored = try AccountStore.load()
+            // Sites the AutoFill extension learnt, which it can only record in its own copy.
+            let copy = (try? AutoFillCopy.load()) ?? []
+            var merged = SyncMerge.addingSites(from: copy, to: stored)
+            if syncEnabled {
+                let cloud = try CloudStore.load()
+                merged = SyncMerge.reconcile(local: merged, cloud: cloud.accounts, deleted: cloud.deleted)
+                for account in SyncMerge.newerSites(merged: merged, cloud: cloud.accounts) {
+                    try CloudStore.save(account)
+                }
             }
-            let cloud = try CloudStore.load()
-            let merged = SyncMerge.reconcile(local: local, cloud: cloud.accounts, deleted: cloud.deleted)
-            for account in SyncMerge.newerSites(merged: merged, cloud: cloud.accounts) {
-                try CloudStore.save(account)
-            }
-            if merged != local { try AccountStore.save(merged) }
+            if merged != stored { try AccountStore.save(merged) }
             accounts = merged
+            shareWithAutoFill(merged, copy: copy)
         } catch {
             if reportingFailure { report("Accounts could not be loaded", error.localizedDescription) }
         }
+    }
+
+    /// What AutoFill was last told, so it is only told again when something changed.
+    @ObservationIgnored private var registered: [Account]?
+
+    /// Keeps the AutoFill extension's copy of the accounts current, and tells AutoFill which
+    /// sites each one is for.
+    private func shareWithAutoFill(_ accounts: [Account], copy: [Account]) {
+        if accounts != copy { try? AutoFillCopy.save(accounts) }
+        guard accounts != registered else { return }
+        registered = accounts
+        Task { await AutoFillCodes.register(accounts) }
     }
 
     /// Saves `account` to the primary store and the local copy, replacing any account
@@ -226,6 +241,20 @@ import ServiceManagement
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(command, forType: .string)
             NSWorkspace.shared.open(Self.chromeWebStoreURL)
+        }
+    }
+
+    /// Asks to turn on Detent's AutoFill extension, or opens its settings if it is already on.
+    @available(macOS 15.0, *)
+    func setUpAutoFill() {
+        Task {
+            if await ASCredentialIdentityStore.shared.state().isEnabled {
+                try? await ASSettingsHelper.openVerificationCodeAppSettings()
+            } else if await ASSettingsHelper.requestToTurnOnCredentialProviderExtension() {
+                // Now AutoFill will listen: tell it the sites.
+                registered = nil
+                reload(reportingFailure: false)
+            }
         }
     }
 

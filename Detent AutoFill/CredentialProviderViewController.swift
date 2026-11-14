@@ -1,5 +1,10 @@
 import AuthenticationServices
 import SwiftUI
+#if os(iOS)
+private typealias HostingController = UIHostingController
+#else
+private typealias HostingController = NSHostingController
+#endif
 
 /// Detent's AutoFill extension: supplies verification codes to Safari and other apps.
 final class CredentialProviderViewController: ASCredentialProviderViewController {
@@ -8,7 +13,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     override func provideCredentialWithoutUserInteraction(for credentialRequest: any ASCredentialRequest) {
         guard credentialRequest.type == .oneTimeCode,
               let id = credentialRequest.credentialIdentity.recordIdentifier.flatMap(UUID.init(uuidString:)),
-              let account = try? CloudStore.load().accounts.first(where: { $0.id == id })
+              let account = ExtensionAccounts.load().first(where: { $0.id == id })
         else {
             extensionContext.cancelRequest(withError: ASExtensionError(.credentialIdentityNotFound))
             return
@@ -18,7 +23,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     /// The user chose Detent from the AutoFill menu, so let them pick the account.
     override func prepareOneTimeCodeCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
-        let accounts = (try? CloudStore.load().accounts) ?? []
+        let accounts = ExtensionAccounts.load()
         // Most specific first, such as [m.example.com, example.com]. The broadest is the one
         // worth remembering, since it covers the others.
         let hosts = serviceIdentifiers.compactMap { Domain.host(from: $0.identifier) }
@@ -31,7 +36,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
 
     /// Called when Detent is turned on in Settings: a good moment to tell AutoFill the sites.
     override func prepareInterfaceForExtensionConfiguration() {
-        let accounts = (try? CloudStore.load().accounts) ?? []
+        let accounts = ExtensionAccounts.load()
         Task {
             // Settings shows a blank sheet until this completes, so never wait long on the store.
             await withTaskGroup(of: Void.self) { group in
@@ -47,7 +52,7 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     private func complete(with account: Account, learning host: String? = nil, among accounts: [Account] = []) async {
         if let host {
             var account = account
-            if account.remember(domain: host), (try? CloudStore.save(account)) != nil {
+            if account.remember(domain: host), (try? ExtensionAccounts.save(account)) != nil {
                 await AutoFillCodes.register(accounts.map { $0.id == account.id ? account : $0 })
             }
         }
@@ -58,11 +63,17 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
     }
 
     private func show(_ view: some View) {
-        let host = UIHostingController(rootView: view)
+        let host = HostingController(rootView: view)
         addChild(host)
         host.view.frame = self.view.bounds
+        #if os(iOS)
         host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         self.view.addSubview(host.view)
         host.didMove(toParent: self)
+        #else
+        host.view.autoresizingMask = [.width, .height]
+        self.view.addSubview(host.view)
+        preferredContentSize = NSSize(width: 420, height: 460)
+        #endif
     }
 }
