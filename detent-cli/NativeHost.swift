@@ -5,8 +5,11 @@ import Foundation
 /// exchanges JSON messages over stdin and stdout, each prefixed with a 32-bit length.
 nonisolated enum NativeHost {
     static let name = "com.colinbm.detent"
-    /// Fixed by the "key" in the extension's manifest.json.
-    static let extensionOrigin = "chrome-extension://pbgaheeaiiddegjmogimabnlpioggiko/"
+    /// The Chrome Web Store copy, then the unpacked copy (fixed by the "key" in manifest.json).
+    static let extensionOrigins = [
+        "chrome-extension://jidikgloajdnephgadlaglogblccjejk/",
+        "chrome-extension://pbgaheeaiiddegjmogimabnlpioggiko/",
+    ]
 
     /// Whether Chrome launched the tool as a native messaging host.
     static func isInvocation(_ arguments: [String]) -> Bool {
@@ -17,7 +20,7 @@ nonisolated enum NativeHost {
     static func run(origin: String) {
         // Chrome only starts hosts for origins the manifest allows; this covers a manifest
         // someone has edited to let another extension in.
-        guard origin == extensionOrigin else {
+        guard extensionOrigins.contains(origin) else {
             write(["error": "This extension may not use Detent."])
             return
         }
@@ -87,7 +90,7 @@ nonisolated extension NativeHost {
                 "description": "Detent two-factor codes",
                 "path": tool.path,
                 "type": "stdio",
-                "allowed_origins": [extensionOrigin],
+                "allowed_origins": extensionOrigins,
             ],
             options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
 

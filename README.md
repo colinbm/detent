@@ -50,14 +50,16 @@ The tool's output is typed into the session, and the trailing newline submits it
 
 The extension fills in the code when a site you have chosen asks for one. It gets each code from the `detent` tool, so the secrets stay in the keychain and the extension never sees them.
 
-It ships inside the app. Chrome only installs packed extensions from its own store, so this one is loaded as a folder:
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/jidikgloajdnephgadlaglogblccjejk):
 
-1. Choose **Set Up Chrome Extension…** from the **…** menu, then **Copy Command and Show Folder**.
+1. Choose **Set Up Chrome Extension…** from the **…** menu, then **Copy Command and Open Store**.
 2. Paste the command into a terminal. It runs `detent chrome-setup`, which tells Chrome where the tool is. It also covers Chrome Beta and Canary, Chromium, Brave, Edge, Vivaldi and Arc.
-3. In Chrome, open `chrome://extensions`, turn on **Developer mode**, and drag the `chrome-extension` folder from the Finder onto the page.
+3. Click **Add to Chrome** on the store page.
 4. Open the site's sign-in page, click the Detent toolbar button, choose the account and click **Fill codes on this site**. Chrome asks you to allow Detent on that site.
 
-Chrome loads the extension from inside the app, so updating Detent updates it too, once Chrome restarts. If you move Detent, do steps 1 to 3 again.
+If you move Detent, run the command again.
+
+To work on the extension, load the `chrome-extension` folder unpacked from `chrome://extensions` with **Developer mode** on. Its manifest `key` gives it a fixed ID that the `detent` tool also accepts. The store rejects that key, so remove it from the copy you zip for upload.
 
 From then on, when a page on that site or its subdomains shows a field for a two-factor code, Detent fills it in. Tick **Submit the form after filling** to have it press the button as well. The same popup lists the sites you have set up and removes them.
 

@@ -179,22 +179,17 @@ import ServiceManagement
         }
     }
 
-    /// Walks through adding the Chrome extension, which ships inside the app. Chrome only takes
-    /// extensions from outside its store as a folder loaded by hand, and the sandbox keeps the
+    static let chromeWebStoreURL = URL(string: "https://chromewebstore.google.com/detail/jidikgloajdnephgadlaglogblccjejk")!
+
+    /// Walks through adding the Chrome extension from the Chrome Web Store. The sandbox keeps the
     /// app from telling Chrome where the `detent` tool is, so the tool does that from a terminal.
     func setUpChromeExtension() {
         let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/detent")
         let alert = NSAlert()
 
-        // Built from bundleURL because resourceURL is relative, and the Finder ignores a request
-        // to show a relative URL.
-        let folder = Bundle.main.bundleURL.appending(path: "Contents/Resources/chrome-extension")
-
-        guard FileManager.default.fileExists(atPath: folder.appending(path: "manifest.json").path),
-              FileManager.default.isExecutableFile(atPath: tool.path)
-        else {
-            alert.messageText = "Chrome extension missing"
-            alert.informativeText = "This copy of Detent does not contain the Chrome extension."
+        guard FileManager.default.isExecutableFile(atPath: tool.path) else {
+            alert.messageText = "Command line tool missing"
+            alert.informativeText = "This copy of Detent does not contain the detent tool."
             NSApp.activate()
             alert.runModal()
             return
@@ -207,19 +202,17 @@ import ServiceManagement
 
             \(command)
 
-            2. In Chrome, open chrome://extensions and turn on Developer mode.
+            2. Add Detent to Chrome from the Chrome Web Store.
 
-            3. Drag the chrome-extension folder from the Finder onto that page.
-
-            Do all three again if you move Detent.
+            Run the command again if you move Detent.
             """
-        alert.addButton(withTitle: "Copy Command and Show Folder")
+        alert.addButton(withTitle: "Copy Command and Open Store")
         alert.addButton(withTitle: "Cancel")
         NSApp.activate()
         if alert.runModal() == .alertFirstButtonReturn {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(command, forType: .string)
-            NSWorkspace.shared.activateFileViewerSelecting([folder])
+            NSWorkspace.shared.open(Self.chromeWebStoreURL)
         }
     }
 
