@@ -4,8 +4,10 @@ import SwiftUI
     @State private var model = AppModel()
 
     var body: some Scene {
-        MenuBarExtra("Detent", systemImage: "lock.shield") {
+        MenuBarExtra {
             ContentView(model: model)
+        } label: {
+            Image(nsImage: .menuBarIcon)
         }
         .menuBarExtraStyle(.window)
     }
