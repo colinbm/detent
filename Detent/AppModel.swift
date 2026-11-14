@@ -12,6 +12,13 @@ import ServiceManagement
     private(set) var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     init() {
+        // The command line tool changed the local copy, such as a site the Chrome extension
+        // learnt: pick it up now, which also copies it to iCloud.
+        DistributedNotificationCenter.default().addObserver(
+            forName: AccountStore.changedNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.reload(reportingFailure: false) }
+        }
         // Nothing announces changes arriving from other devices, so refresh the local copy
         // periodically: the command line tool only ever sees that copy.
         Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
@@ -46,7 +53,7 @@ import ServiceManagement
             }
             let cloud = try CloudStore.load()
             let merged = SyncMerge.reconcile(local: local, cloud: cloud.accounts, deleted: cloud.deleted)
-            for account in SyncMerge.newerDomains(merged: merged, cloud: cloud.accounts) {
+            for account in SyncMerge.newerSites(merged: merged, cloud: cloud.accounts) {
                 try CloudStore.save(account)
             }
             if merged != local { try AccountStore.save(merged) }
@@ -62,7 +69,7 @@ import ServiceManagement
         var account = account
         if let existing = accounts.first(where: { $0.issuer == account.issuer && $0.name == account.name }) {
             account.id = existing.id
-            account.domains = Domain.union(account.domains, existing.domains)
+            account.sites = SiteRecord.merge(account.sites, existing.sites)
         }
         if syncEnabled { try CloudStore.save(account) }
         try AccountStore.add(account)
@@ -303,6 +310,48 @@ import ServiceManagement
             return nil
         }
         return passphrase
+    }
+
+    /// Lets the user edit the sites AutoFill offers `account` on, one per line.
+    func editSites(of account: Account) {
+        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 280, height: 120))
+        text.string = account.domains.joined(separator: "\n")
+        text.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        text.isAutomaticQuoteSubstitutionEnabled = false
+        text.isAutomaticTextReplacementEnabled = false
+        text.isAutomaticSpellingCorrectionEnabled = false
+        let scroll = NSScrollView(frame: text.frame)
+        scroll.documentView = text
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+
+        let alert = NSAlert()
+        alert.messageText = "Sites for \(account.label)"
+        alert.informativeText = """
+            One per line. On these sites and their subdomains, AutoFill on your iPhone and iPad \
+            offers this account’s code.
+            """
+        alert.accessoryView = scroll
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Cancel")
+        alert.window.initialFirstResponder = text
+        NSApp.activate()
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let lines = text.string.split(whereSeparator: \.isNewline).map(String.init)
+            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        let unreadable = lines.filter { Domain.host(from: $0) == nil }
+        var updated = account
+        updated.setDomains(lines)
+        do {
+            try store(updated)
+        } catch {
+            report("The sites could not be saved", error.localizedDescription)
+        }
+        reload()
+        if !unreadable.isEmpty {
+            report("Some lines were left out", "These are not site addresses: " + unreadable.joined(separator: ", "))
+        }
     }
 
     func remove(_ account: Account) {

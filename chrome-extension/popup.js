@@ -94,7 +94,7 @@ $('add').addEventListener('submit', async (event) => {
 
   const rule = { host, account: account.value, label: account.text, submit: $('submit').checked };
   await saveRules([...(await loadRules()).filter((other) => other.host !== host), rule]);
-  await rememberSite(host, account.value);
+  await rememberSite(host, account.value, true);
   await showRules();
   await requestAccess(host);
   showRules();

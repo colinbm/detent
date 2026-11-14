@@ -8,10 +8,11 @@ nonisolated struct Account: Codable, Identifiable, Sendable, Equatable {
     var algorithm: OTPAlgorithm = .sha1
     var digits = 6
     var period = 30
-    /// Sites this account signs in to, as bare host names such as "github.com". Learnt when the
-    /// QR code is scanned from a browser, or when the Chrome extension or AutoFill first fills a
-    /// code on a site, so AutoFill can offer the right code.
-    var domains: [String] = []
+    /// Sites this account signs in to, keyed by bare host name such as "github.com", so AutoFill
+    /// can offer the right code. Learnt when the QR code is scanned from a browser, or when the
+    /// Chrome extension or AutoFill is first used on a site, and editable by hand. Removed sites
+    /// keep their record so other devices can tell "removed" from "not heard of yet".
+    var sites: [String: SiteRecord] = [:]
 
     /// "Issuer:name", or whichever half is present.
     var label: String {
@@ -27,10 +28,10 @@ nonisolated struct Account: Codable, Identifiable, Sendable, Equatable {
 
 nonisolated extension Account {
     private enum CodingKeys: String, CodingKey {
-        case id, issuer, name, secret, algorithm, digits, period, domains
+        case id, issuer, name, secret, algorithm, digits, period, sites
     }
 
-    /// Accounts saved before `domains` existed have no such key.
+    /// Accounts saved before sites existed have no such key.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
@@ -40,7 +41,12 @@ nonisolated extension Account {
         algorithm = try c.decode(OTPAlgorithm.self, forKey: .algorithm)
         digits = try c.decode(Int.self, forKey: .digits)
         period = try c.decode(Int.self, forKey: .period)
-        domains = try c.decodeIfPresent([String].self, forKey: .domains) ?? []
+        sites = try c.decodeIfPresent([String: SiteRecord].self, forKey: .sites) ?? [:]
+    }
+
+    /// The sites currently in use, sorted.
+    var domains: [String] {
+        sites.filter(\.value.isActive).keys.sorted()
     }
 
     /// Whether this account is for `host` or a site it is a subdomain of.
@@ -48,13 +54,50 @@ nonisolated extension Account {
         domains.contains { Domain.host(host, isWithin: $0) }
     }
 
-    /// Adds `domain` unless it is already covered. Returns whether anything changed.
+    /// Adds `domain` unless it is already covered. A site the user removed is only added back if
+    /// `overridingRemoval`, meaning the user has just chosen this account for it again.
+    /// Returns whether anything changed.
     @discardableResult
-    mutating func remember(domain: String) -> Bool {
+    mutating func remember(domain: String, overridingRemoval: Bool = true, at now: Date = Date()) -> Bool {
         guard let domain = Domain.host(from: domain), !matches(host: domain) else { return false }
-        domains.append(domain)
-        domains.sort()
+        let existing = sites[domain]
+        if existing != nil && !overridingRemoval { return false }
+        sites[domain] = SiteRecord(added: now, removed: existing?.removed)
         return true
+    }
+
+    /// Removes `domain`. Returns whether it was in use.
+    @discardableResult
+    mutating func forget(domain: String, at now: Date = Date()) -> Bool {
+        guard sites[domain]?.isActive == true else { return false }
+        sites[domain]?.removed = now
+        return true
+    }
+
+    /// Makes `list` the sites in use, recording what was added and removed.
+    mutating func setDomains(_ list: [String], at now: Date = Date()) {
+        let wanted = Set(list.compactMap(Domain.host(from:)))
+        for domain in domains where !wanted.contains(domain) { forget(domain: domain, at: now) }
+        for domain in wanted.sorted() where sites[domain]?.isActive != true {
+            sites[domain] = SiteRecord(added: now, removed: sites[domain]?.removed)
+        }
+    }
+}
+
+/// When a site was last added to, and last removed from, an account.
+nonisolated struct SiteRecord: Codable, Sendable, Equatable {
+    var added: Date
+    var removed: Date?
+
+    var isActive: Bool { removed.map { added > $0 } ?? true }
+
+    /// What two copies of an account agree on: the latest addition and the latest removal, so
+    /// whichever happened last wins, wherever it happened.
+    static func merge(_ a: [String: SiteRecord], _ b: [String: SiteRecord]) -> [String: SiteRecord] {
+        a.merging(b) { mine, theirs in
+            SiteRecord(added: max(mine.added, theirs.added),
+                       removed: [mine.removed, theirs.removed].compactMap { $0 }.max())
+        }
     }
 }
 
@@ -72,11 +115,6 @@ nonisolated enum Domain {
 
     static func host(_ host: String, isWithin domain: String) -> Bool {
         host == domain || host.hasSuffix(".\(domain)")
-    }
-
-    /// Both lists' domains, each once, sorted.
-    static func union(_ a: [String], _ b: [String]) -> [String] {
-        Array(Set(a + b)).sorted()
     }
 }
 

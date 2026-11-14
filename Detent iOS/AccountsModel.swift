@@ -37,7 +37,7 @@ struct Problem: Identifiable {
         var account = account
         if let existing = accounts.first(where: { $0.issuer == account.issuer && $0.name == account.name }) {
             account.id = existing.id
-            account.domains = Domain.union(account.domains, existing.domains)
+            account.sites = SiteRecord.merge(account.sites, existing.sites)
         }
         try CloudStore.save(account)
         reload()
@@ -70,6 +70,18 @@ struct Problem: Identifiable {
         } catch {
             return error.localizedDescription
         }
+    }
+
+    /// Makes `domains` the sites AutoFill offers `account` on.
+    func setSites(_ domains: [String], for account: Account) {
+        var account = account
+        account.setDomains(domains)
+        do {
+            try CloudStore.save(account)
+        } catch {
+            problem = Problem(title: "The sites could not be saved", detail: error.localizedDescription)
+        }
+        reload()
     }
 
     func remove(_ account: Account) {

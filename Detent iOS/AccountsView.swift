@@ -13,6 +13,7 @@ struct AccountsView: View {
     @State private var photo: PhotosPickerItem?
     @State private var isEnteringKey = false
     @State private var pendingDeletion: Account?
+    @State private var editingSites: Account?
     @State private var copied: Account.ID?
     @State private var copyCount = 0
 
@@ -68,6 +69,9 @@ struct AccountsView: View {
         .sheet(isPresented: $isEnteringKey) {
             AddKeyView(model: model)
         }
+        .sheet(item: $editingSites) { account in
+            SitesView(model: model, accountID: account.id)
+        }
         .confirmationDialog(
             "Delete “\(pendingDeletion?.label ?? "")”?",
             isPresented: Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } }),
@@ -107,8 +111,13 @@ struct AccountsView: View {
                     .swipeActions {
                         Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = account }
                     }
+                    .swipeActions(edge: .leading) {
+                        Button("Sites", systemImage: "globe") { editingSites = account }
+                            .tint(.accentColor)
+                    }
                     .contextMenu {
                         Button("Copy Code", systemImage: "doc.on.doc") { copy(account) }
+                        Button("Sites…", systemImage: "globe") { editingSites = account }
                         Button("Delete", systemImage: "trash", role: .destructive) { pendingDeletion = account }
                     }
                 }

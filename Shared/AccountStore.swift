@@ -12,6 +12,10 @@ nonisolated struct KeychainError: LocalizedError {
 /// All accounts live in a single login-keychain item (a JSON array), shared by the app and
 /// the command line tool. One item means one "Always Allow" per program rather than one per account.
 nonisolated enum AccountStore {
+    /// Posted, without a payload, by the command line tool after it changes accounts, so that
+    /// a running app reloads them and copies the change to iCloud straight away.
+    static let changedNotification = Notification.Name("com.colinbm.detent.accounts-changed")
+
     private static let baseQuery: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: "Detent",
@@ -54,7 +58,7 @@ nonisolated enum AccountStore {
         if let index = accounts.firstIndex(where: { $0.issuer == account.issuer && $0.name == account.name }) {
             var updated = account
             updated.id = accounts[index].id
-            updated.domains = Domain.union(account.domains, accounts[index].domains)
+            updated.sites = SiteRecord.merge(account.sites, accounts[index].sites)
             accounts[index] = updated
         } else {
             accounts.append(account)
@@ -62,13 +66,13 @@ nonisolated enum AccountStore {
         try save(accounts)
     }
 
-    /// Records that the account with `id` is used on `domain`. Returns whether it was new.
-    /// With iCloud sync on, the app copies the site to iCloud on its next refresh.
+    /// Records that the account with `id` is used on `domain`; see `Account.remember`.
+    /// Returns whether anything changed.
     @discardableResult
-    static func remember(domain: String, forAccount id: Account.ID) throws -> Bool {
+    static func remember(domain: String, forAccount id: Account.ID, overridingRemoval: Bool) throws -> Bool {
         var accounts = try load()
         guard let index = accounts.firstIndex(where: { $0.id == id }),
-              accounts[index].remember(domain: domain)
+              accounts[index].remember(domain: domain, overridingRemoval: overridingRemoval)
         else { return false }
         try save(accounts)
         return true

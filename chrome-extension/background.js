@@ -16,7 +16,7 @@ function syncContentScript() {
 
 // Rules made before Detent stored sites with accounts, or while it could not be reached.
 async function rememberSites() {
-  for (const rule of await loadRules()) await rememberSite(rule.host, rule.account);
+  for (const rule of await loadRules()) await rememberSite(rule.host, rule.account, false);
 }
 
 chrome.runtime.onInstalled.addListener(() => {

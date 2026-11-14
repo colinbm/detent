@@ -38,11 +38,19 @@ nonisolated enum NativeHost {
 
             case "remember":
                 // The extension's rules say which account a site uses; the app shares that with
-                // AutoFill on its other devices.
+                // AutoFill on its other devices. Only a rule the user has just saved brings back
+                // a site they removed in the app; the extension's catch-up at startup does not.
                 guard let id = (message["id"] as? String).flatMap(UUID.init(uuidString:)),
                       let host = message["host"] as? String
                 else { return ["error": "Unknown request."] }
-                return ["added": try AccountStore.remember(domain: host, forAccount: id)]
+                let chosen = message["chosen"] as? Bool ?? false
+                let added = try AccountStore.remember(domain: host, forAccount: id, overridingRemoval: chosen)
+                if added {
+                    // This tool cannot reach iCloud Keychain, so ask the app to copy it there now.
+                    DistributedNotificationCenter.default().postNotificationName(
+                        AccountStore.changedNotification, object: nil, userInfo: nil, deliverImmediately: true)
+                }
+                return ["added": added]
 
             case "code":
                 guard let id = message["id"] as? String,

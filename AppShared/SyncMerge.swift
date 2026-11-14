@@ -8,14 +8,14 @@ nonisolated enum SyncMerge {
     /// was deleted: "not shown" can just mean iCloud Keychain is off or has not caught up, and
     /// only a deletion record proves the account is really gone.
     ///
-    /// The one exception is `domains`, which only ever grow: an account keeps the sites either
-    /// copy knows. The command line tool records sites in the local copy only, and two devices
-    /// may each learn a site before hearing of the other's.
+    /// The one exception is `sites`, merged record by record so the latest change to each site
+    /// wins: the command line tool records sites in the local copy only, and two devices may
+    /// each change a site before hearing of the other's change.
     static func reconcile(local: [Account], cloud: [Account], deleted: Set<Account.ID>) -> [Account] {
         let localByID = Dictionary(local.map { ($0.id, $0) }) { first, _ in first }
         let merged = cloud.map { account in
             var account = account
-            if let mine = localByID[account.id] { account.domains = Domain.union(account.domains, mine.domains) }
+            if let mine = localByID[account.id] { account.sites = SiteRecord.merge(account.sites, mine.sites) }
             return account
         }
         let cloudIDs = Set(cloud.map(\.id))
@@ -23,12 +23,12 @@ nonisolated enum SyncMerge {
         return sorted(merged + localOnly)
     }
 
-    /// The merged accounts that know sites iCloud's copy does not, and so need uploading.
-    static func newerDomains(merged: [Account], cloud: [Account]) -> [Account] {
+    /// The merged accounts with site changes iCloud's copy lacks, and so need uploading.
+    static func newerSites(merged: [Account], cloud: [Account]) -> [Account] {
         let cloudByID = Dictionary(cloud.map { ($0.id, $0) }) { first, _ in first }
         return merged.filter { account in
             guard let theirs = cloudByID[account.id] else { return false }
-            return Set(account.domains) != Set(theirs.domains)
+            return account.sites != theirs.sites
         }
     }
 
@@ -66,7 +66,7 @@ nonisolated enum SyncMerge {
     private static func sameDetails(_ a: Account, _ b: Account) -> Bool {
         var b = b
         b.id = a.id
-        b.domains = a.domains
+        b.sites = a.sites
         return a == b
     }
 }

@@ -48,7 +48,11 @@ function originPattern(host) {
   return bare ? `*://${host}/*` : `*://*.${host}/*`;
 }
 
-/** Tells Detent that `host` uses the account with id `account`, so AutoFill can offer its code there. */
-function rememberSite(host, account) {
-  return askDetent({ cmd: 'remember', id: account, host });
+/**
+ * Tells Detent that `host` uses the account with id `account`, so AutoFill can offer its code
+ * there. `chosen` is true when the user has just picked the account, which brings the site back
+ * if they had removed it in the app.
+ */
+function rememberSite(host, account, chosen) {
+  return askDetent({ cmd: 'remember', id: account, host, chosen });
 }

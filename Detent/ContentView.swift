@@ -28,6 +28,8 @@ struct ContentView: View {
                                 }
                                 .contextMenu {
                                     Button("Copy Code") { model.copyCode(for: account) }
+                                    Button("Edit Sites…") { model.editSites(of: account) }
+                                    Divider()
                                     Button("Delete “\(account.label)”", role: .destructive) { model.remove(account) }
                                 }
                             }

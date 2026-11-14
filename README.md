@@ -82,7 +82,7 @@ Each account keeps a list of the sites it signs in to, which is what AutoFill us
 - you set up the Chrome extension on a site.
 - you pick the account from AutoFill on the iPhone or iPad.
 
-Sites are shared through iCloud Keychain like the rest of the account, and are never removed.
+To change them, swipe right on an account in the iOS app and tap **Sites**, or choose **Edit Sites…** from an account's context menu on the Mac. Sites are shared through iCloud Keychain like the rest of the account, and the latest change to each site wins, so a site removed on one device stays removed everywhere until someone adds it back. When the Chrome extension records a site, the `detent` tool tells the Mac app, which copies it to iCloud straight away.
 
 ## Where secrets are stored
 
