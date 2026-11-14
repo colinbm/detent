@@ -15,11 +15,18 @@ struct Problem: Identifiable {
 @Observable final class AccountsModel {
     var accounts: [Account] = []
     var problem: Problem?
+    /// What AutoFill was last told, so it is only told again when something changed.
+    private var registered: [Account]?
 
     /// `reportingFailure` is off for background refreshes, which would otherwise repeat the alert.
     func reload(reportingFailure: Bool = true) {
         do {
             accounts = try CloudStore.load().accounts
+            if accounts != registered {
+                registered = accounts
+                let accounts = accounts
+                Task { await AutoFillCodes.register(accounts) }
+            }
         } catch {
             if reportingFailure { problem = Problem(title: "Accounts could not be loaded", detail: error.localizedDescription) }
         }
@@ -30,6 +37,7 @@ struct Problem: Identifiable {
         var account = account
         if let existing = accounts.first(where: { $0.issuer == account.issuer && $0.name == account.name }) {
             account.id = existing.id
+            account.domains = Domain.union(account.domains, existing.domains)
         }
         try CloudStore.save(account)
         reload()

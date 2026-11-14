@@ -65,10 +65,11 @@ async function showAccounts() {
   const accounts = reply.accounts ?? [];
   $('account').replaceChildren(...accounts.map((account) => new Option(account.label, account.id)));
   $('save').disabled = accounts.length === 0;
+  return accounts;
 }
 
 /** Fills the form in for the page the popup was opened on. */
-async function showCurrentSite() {
+async function showCurrentSite(accounts) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!/^https?:/.test(tab?.url ?? '')) return;
 
@@ -78,7 +79,11 @@ async function showCurrentSite() {
   if (rule) {
     $('account').value = rule.account;
     $('submit').checked = rule.submit;
+    return;
   }
+  // Detent may already know which account this site uses, from a scan or another device.
+  const known = accounts.find((account) => (account.domains ?? []).some((domain) => hostMatches(host, domain)));
+  if (known) $('account').value = known.id;
 }
 
 $('add').addEventListener('submit', async (event) => {
@@ -89,6 +94,7 @@ $('add').addEventListener('submit', async (event) => {
 
   const rule = { host, account: account.value, label: account.text, submit: $('submit').checked };
   await saveRules([...(await loadRules()).filter((other) => other.host !== host), rule]);
+  await rememberSite(host, account.value);
   await showRules();
   await requestAccess(host);
   showRules();

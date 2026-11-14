@@ -46,6 +46,9 @@ import ServiceManagement
             }
             let cloud = try CloudStore.load()
             let merged = SyncMerge.reconcile(local: local, cloud: cloud.accounts, deleted: cloud.deleted)
+            for account in SyncMerge.newerDomains(merged: merged, cloud: cloud.accounts) {
+                try CloudStore.save(account)
+            }
             if merged != local { try AccountStore.save(merged) }
             accounts = merged
         } catch {
@@ -59,6 +62,7 @@ import ServiceManagement
         var account = account
         if let existing = accounts.first(where: { $0.issuer == account.issuer && $0.name == account.name }) {
             account.id = existing.id
+            account.domains = Domain.union(account.domains, existing.domains)
         }
         if syncEnabled { try CloudStore.save(account) }
         try AccountStore.add(account)
@@ -102,9 +106,9 @@ import ServiceManagement
         isScanning = true
         defer { isScanning = false }
 
-        let payloads: [String]
+        let found: [ScreenScanner.Found]
         do {
-            payloads = try await ScreenScanner.qrPayloads()
+            found = try await ScreenScanner.scan()
         } catch {
             report("The screen could not be scanned", CGPreflightScreenCaptureAccess()
                 ? error.localizedDescription
@@ -112,18 +116,20 @@ import ServiceManagement
             return
         }
 
-        let uris = payloads.filter { $0.lowercased().hasPrefix("otpauth://") }
-        guard !uris.isEmpty else {
-            report("No account added", payloads.isEmpty
+        let setups = found.filter { $0.payload.lowercased().hasPrefix("otpauth://") }
+        guard !setups.isEmpty else {
+            report("No account added", found.isEmpty
                 ? "No QR code found on screen."
                 : "The QR code on screen is not a 2FA setup code.")
             return
         }
 
         var failure: String?
-        for uri in uris {
+        for setup in setups {
             do {
-                let account = try Account(otpauthURI: uri)
+                var account = try Account(otpauthURI: setup.payload)
+                // Scanned off a sign-in page, so that page's site is where the code is used.
+                if let host = setup.host { account.remember(domain: host) }
                 try store(account)
             } catch {
                 failure = error.localizedDescription

@@ -65,6 +65,25 @@ From then on, when a page on that site or its subdomains shows a field for a two
 
 The extension can only read pages on the sites you add, and only asks for a code once a code field is on the page. A code is never entered twice in the same tab: if a page asks again, Detent waits for the next one. If no code appears, the toolbar button shows a red **!**; hover over it for the reason. Fields inside embedded frames are not filled.
 
+## iPhone and iPad
+
+The Detent iOS app shows the same accounts as the Mac when **Sync with iCloud Keychain** is on there. Add accounts by scanning a QR code with the camera, choosing a photo or screenshot of one, or entering the key.
+
+### AutoFill
+
+Turn on Detent in Settings › General › AutoFill & Passwords (iOS 18 or later). When a page or app asks for a verification code, tap the field, choose **AutoFill** › **Passwords** and pick the account. Detent remembers which site you picked it for, and from then on offers that account's code above the keyboard there in one tap.
+
+### Sites
+
+Each account keeps a list of the sites it signs in to, which is what AutoFill uses to suggest it. Sites are added when:
+
+- the Mac scans the QR code from a browser window. Detent asks Safari, Chrome, Brave, Edge, Vivaldi or Arc for the page's address; macOS asks once per browser whether Detent may do that.
+- the setup code's issuer is itself a domain, such as "Amazon.com".
+- you set up the Chrome extension on a site.
+- you pick the account from AutoFill on the iPhone or iPad.
+
+Sites are shared through iCloud Keychain like the rest of the account, and are never removed.
+
 ## Where secrets are stored
 
 By default, accounts live in a single item, "Detent accounts", in your login keychain. They stay on this Mac.

@@ -7,10 +7,29 @@ nonisolated enum SyncMerge {
     /// iCloud's accounts win. A local account iCloud does not show is kept unless iCloud says it
     /// was deleted: "not shown" can just mean iCloud Keychain is off or has not caught up, and
     /// only a deletion record proves the account is really gone.
+    ///
+    /// The one exception is `domains`, which only ever grow: an account keeps the sites either
+    /// copy knows. The command line tool records sites in the local copy only, and two devices
+    /// may each learn a site before hearing of the other's.
     static func reconcile(local: [Account], cloud: [Account], deleted: Set<Account.ID>) -> [Account] {
+        let localByID = Dictionary(local.map { ($0.id, $0) }) { first, _ in first }
+        let merged = cloud.map { account in
+            var account = account
+            if let mine = localByID[account.id] { account.domains = Domain.union(account.domains, mine.domains) }
+            return account
+        }
         let cloudIDs = Set(cloud.map(\.id))
         let localOnly = local.filter { !cloudIDs.contains($0.id) && !deleted.contains($0.id) }
-        return sorted(cloud + localOnly)
+        return sorted(merged + localOnly)
+    }
+
+    /// The merged accounts that know sites iCloud's copy does not, and so need uploading.
+    static func newerDomains(merged: [Account], cloud: [Account]) -> [Account] {
+        let cloudByID = Dictionary(cloud.map { ($0.id, $0) }) { first, _ in first }
+        return merged.filter { account in
+            guard let theirs = cloudByID[account.id] else { return false }
+            return Set(account.domains) != Set(theirs.domains)
+        }
     }
 
     /// The accounts to upload when sync is first turned on, so that nothing on this Mac is lost.
@@ -47,6 +66,7 @@ nonisolated enum SyncMerge {
     private static func sameDetails(_ a: Account, _ b: Account) -> Bool {
         var b = b
         b.id = a.id
+        b.domains = a.domains
         return a == b
     }
 }

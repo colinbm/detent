@@ -54,11 +54,24 @@ nonisolated enum AccountStore {
         if let index = accounts.firstIndex(where: { $0.issuer == account.issuer && $0.name == account.name }) {
             var updated = account
             updated.id = accounts[index].id
+            updated.domains = Domain.union(account.domains, accounts[index].domains)
             accounts[index] = updated
         } else {
             accounts.append(account)
         }
         try save(accounts)
+    }
+
+    /// Records that the account with `id` is used on `domain`. Returns whether it was new.
+    /// With iCloud sync on, the app copies the site to iCloud on its next refresh.
+    @discardableResult
+    static func remember(domain: String, forAccount id: Account.ID) throws -> Bool {
+        var accounts = try load()
+        guard let index = accounts.firstIndex(where: { $0.id == id }),
+              accounts[index].remember(domain: domain)
+        else { return false }
+        try save(accounts)
+        return true
     }
 
     static func remove(id: Account.ID) throws {

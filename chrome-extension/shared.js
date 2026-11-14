@@ -47,3 +47,8 @@ function originPattern(host) {
   const bare = !host.includes('.') || /^[\d.]+$/.test(host) || host.startsWith('[');
   return bare ? `*://${host}/*` : `*://*.${host}/*`;
 }
+
+/** Tells Detent that `host` uses the account with id `account`, so AutoFill can offer its code there. */
+function rememberSite(host, account) {
+  return askDetent({ cmd: 'remember', id: account, host });
+}

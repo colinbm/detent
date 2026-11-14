@@ -34,7 +34,15 @@ nonisolated enum NativeHost {
             let accounts = try AccountStore.load()
             switch message["cmd"] as? String {
             case "list":
-                return ["accounts": accounts.map { ["id": $0.id.uuidString, "label": $0.label] }]
+                return ["accounts": accounts.map { ["id": $0.id.uuidString, "label": $0.label, "domains": $0.domains] }]
+
+            case "remember":
+                // The extension's rules say which account a site uses; the app shares that with
+                // AutoFill on its other devices.
+                guard let id = (message["id"] as? String).flatMap(UUID.init(uuidString:)),
+                      let host = message["host"] as? String
+                else { return ["error": "Unknown request."] }
+                return ["added": try AccountStore.remember(domain: host, forAccount: id)]
 
             case "code":
                 guard let id = message["id"] as? String,

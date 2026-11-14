@@ -8,6 +8,10 @@ nonisolated struct Account: Codable, Identifiable, Sendable, Equatable {
     var algorithm: OTPAlgorithm = .sha1
     var digits = 6
     var period = 30
+    /// Sites this account signs in to, as bare host names such as "github.com". Learnt when the
+    /// QR code is scanned from a browser, or when the Chrome extension or AutoFill first fills a
+    /// code on a site, so AutoFill can offer the right code.
+    var domains: [String] = []
 
     /// "Issuer:name", or whichever half is present.
     var label: String {
@@ -18,6 +22,61 @@ nonisolated struct Account: Codable, Identifiable, Sendable, Equatable {
 
     func code(at date: Date = Date()) -> String {
         TOTP.code(secret: secret, algorithm: algorithm, digits: digits, period: period, at: date)
+    }
+}
+
+nonisolated extension Account {
+    private enum CodingKeys: String, CodingKey {
+        case id, issuer, name, secret, algorithm, digits, period, domains
+    }
+
+    /// Accounts saved before `domains` existed have no such key.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        issuer = try c.decode(String.self, forKey: .issuer)
+        name = try c.decode(String.self, forKey: .name)
+        secret = try c.decode(Data.self, forKey: .secret)
+        algorithm = try c.decode(OTPAlgorithm.self, forKey: .algorithm)
+        digits = try c.decode(Int.self, forKey: .digits)
+        period = try c.decode(Int.self, forKey: .period)
+        domains = try c.decodeIfPresent([String].self, forKey: .domains) ?? []
+    }
+
+    /// Whether this account is for `host` or a site it is a subdomain of.
+    func matches(host: String) -> Bool {
+        domains.contains { Domain.host(host, isWithin: $0) }
+    }
+
+    /// Adds `domain` unless it is already covered. Returns whether anything changed.
+    @discardableResult
+    mutating func remember(domain: String) -> Bool {
+        guard let domain = Domain.host(from: domain), !matches(host: domain) else { return false }
+        domains.append(domain)
+        domains.sort()
+        return true
+    }
+}
+
+/// Host names as Detent stores them: lowercase, without scheme, port, path or a leading "www.".
+nonisolated enum Domain {
+    /// The host in `text`, which may be a bare host name or a whole URL. Nil if there is none.
+    static func host(from text: String) -> String? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !text.isEmpty, !text.contains(" ") else { return nil }
+        let url = URLComponents(string: text.contains("://") ? text : "https://\(text)")
+        guard var host = url?.host, !host.isEmpty else { return nil }
+        if host.hasPrefix("www.") { host.removeFirst(4) }
+        return host.contains(".") ? host : nil
+    }
+
+    static func host(_ host: String, isWithin domain: String) -> Bool {
+        host == domain || host.hasSuffix(".\(domain)")
+    }
+
+    /// Both lists' domains, each once, sorted.
+    static func union(_ a: [String], _ b: [String]) -> [String] {
+        Array(Set(a + b)).sorted()
     }
 }
 
@@ -93,6 +152,8 @@ nonisolated extension Account {
             digits: digits,
             period: period
         )
+        // Some sites name themselves by domain, such as "Amazon.com".
+        if self.issuer.contains(".") { remember(domain: self.issuer) }
     }
 }
 

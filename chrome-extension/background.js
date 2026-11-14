@@ -14,8 +14,19 @@ function syncContentScript() {
   return syncing;
 }
 
-chrome.runtime.onInstalled.addListener(syncContentScript);
-chrome.runtime.onStartup.addListener(syncContentScript);
+// Rules made before Detent stored sites with accounts, or while it could not be reached.
+async function rememberSites() {
+  for (const rule of await loadRules()) await rememberSite(rule.host, rule.account);
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  syncContentScript();
+  rememberSites();
+});
+chrome.runtime.onStartup.addListener(() => {
+  syncContentScript();
+  rememberSites();
+});
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.rules) syncContentScript();
 });

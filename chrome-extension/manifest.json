@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Detent",
   "description": "Fills in two-factor codes from the Detent app on the sites you choose.",
-  "version": "1.0",
+  "version": "1.1",
   "minimum_chrome_version": "116",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyPRoje0+ayqDhdBhFjH5icmM7aRSPnlYkgLbpQqMP5vSLi/0e5t6zlE6iZqMEY1YjolB7l+pYHE4UBPUcSsT6pnpAYXPuEBiWIENKw8LVnb7RXhZxKeT8N7T6VUeYQq5+D4Ti5PMl2nyf9f2ac76chh+lamcjrimr+pgsCfaPwIcesqGT+hJHl+OvBFiRn+h9Mp+hJb3R3KECUuuAqT0sXdJdPh5j/g0f6KpBb9w0iVPj6r8BYJzksc/l8DVwCTcLVCXp8wHKAK08COY6WjuT5nrH43raaUu11NfVK1Wn29ykYYb6OgYKeQYcW63NgFuXNf/EthA5zUpeKbeiPFmwwIDAQAB",
   "icons": {
