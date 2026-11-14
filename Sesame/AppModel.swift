@@ -186,8 +186,11 @@ import ServiceManagement
         let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/sesame")
         let alert = NSAlert()
 
-        guard let folder = Bundle.main.resourceURL?.appending(path: "chrome-extension"),
-              FileManager.default.fileExists(atPath: folder.appending(path: "manifest.json").path),
+        // Built from bundleURL because resourceURL is relative, and the Finder ignores a request
+        // to show a relative URL.
+        let folder = Bundle.main.bundleURL.appending(path: "Contents/Resources/chrome-extension")
+
+        guard FileManager.default.fileExists(atPath: folder.appending(path: "manifest.json").path),
               FileManager.default.isExecutableFile(atPath: tool.path)
         else {
             alert.messageText = "Chrome extension missing"
