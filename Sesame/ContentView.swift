@@ -104,6 +104,7 @@ struct ContentView: View {
                     Button("Import Accounts…") { model.importAccounts() }
                     Divider()
                     Button("Install Command Line Tool…") { model.installCommandLineTool() }
+                    Button("Set Up Chrome Extension…") { model.setUpChromeExtension() }
                     Divider()
                     Button("Quit Sesame") { NSApplication.shared.terminate(nil) }
                 } label: {

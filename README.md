@@ -25,6 +25,7 @@ The tool ships inside the app. Choose **Install Command Line Tool…** from the 
 ```
 sesame <name>   print the current code for the matching account
 sesame list     list accounts
+sesame chrome-setup   let the Chrome extension fetch codes
 ```
 
 Accounts are added and removed in the app.
@@ -44,6 +45,23 @@ In Settings › Profiles › Advanced › Triggers, add a trigger:
 | Parameters | `/usr/local/bin/sesame github` |
 
 The tool's output is typed into the session, and the trailing newline submits it.
+
+## Chrome extension
+
+The extension fills in the code when a site you have chosen asks for one. It gets each code from the `sesame` tool, so the secrets stay in the keychain and the extension never sees them.
+
+It ships inside the app. Chrome only installs packed extensions from its own store, so this one is loaded as a folder:
+
+1. Choose **Set Up Chrome Extension…** from the **…** menu, then **Copy Command and Show Folder**.
+2. Paste the command into a terminal. It runs `sesame chrome-setup`, which tells Chrome where the tool is. It also covers Chrome Beta and Canary, Chromium, Brave, Edge, Vivaldi and Arc.
+3. In Chrome, open `chrome://extensions`, turn on **Developer mode**, and drag the `chrome-extension` folder from the Finder onto the page.
+4. Open the site's sign-in page, click the Sesame toolbar button, choose the account and click **Fill codes on this site**. Chrome asks you to allow Sesame on that site.
+
+Chrome loads the extension from inside the app, so updating Sesame updates it too, once Chrome restarts. If you move Sesame, do steps 1 to 3 again.
+
+From then on, when a page on that site or its subdomains shows a field for a two-factor code, Sesame fills it in. Tick **Submit the form after filling** to have it press the button as well. The same popup lists the sites you have set up and removes them.
+
+The extension can only read pages on the sites you add, and only asks for a code once a code field is on the page. A code is never entered twice in the same tab: if a page asks again, Sesame waits for the next one. If no code appears, the toolbar button shows a red **!**; hover over it for the reason. Fields inside embedded frames are not filled.
 
 ## Where secrets are stored
 

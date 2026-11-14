@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
+  <title>Sesame</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon-128.png" alt="">
+    <h1>Sesame</h1>
+  </header>
+
+  <p id="problem" role="alert" hidden></p>
+
+  <form id="add">
+    <div class="field">
+      <label for="host">Site</label>
+      <input id="host" name="host" placeholder="example.com" required
+             autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="account">Account</label>
+      <select id="account" name="account" required></select>
+    </div>
+    <div class="check">
+      <input id="submit" name="autosubmit" type="checkbox">
+      <label for="submit">Submit the form after filling</label>
+    </div>
+    <button id="save" type="submit">Fill codes on this site</button>
+  </form>
+
+  <section id="sites" hidden>
+    <h2>Sites</h2>
+    <ul id="rules"></ul>
+  </section>
+
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

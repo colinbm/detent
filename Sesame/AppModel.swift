@@ -179,6 +179,47 @@ import ServiceManagement
         }
     }
 
+    /// Walks through adding the Chrome extension, which ships inside the app. Chrome only takes
+    /// extensions from outside its store as a folder loaded by hand, and the sandbox keeps the
+    /// app from telling Chrome where the `sesame` tool is, so the tool does that from a terminal.
+    func setUpChromeExtension() {
+        let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/sesame")
+        let alert = NSAlert()
+
+        guard let folder = Bundle.main.resourceURL?.appending(path: "chrome-extension"),
+              FileManager.default.fileExists(atPath: folder.appending(path: "manifest.json").path),
+              FileManager.default.isExecutableFile(atPath: tool.path)
+        else {
+            alert.messageText = "Chrome extension missing"
+            alert.informativeText = "This copy of Sesame does not contain the Chrome extension."
+            NSApp.activate()
+            alert.runModal()
+            return
+        }
+
+        let command = "'" + tool.path.replacingOccurrences(of: "'", with: "'\\''") + "' chrome-setup"
+        alert.messageText = "Set up the Chrome extension"
+        alert.informativeText = """
+            1. Paste this into a terminal. It tells Chrome where Sesame is:
+
+            \(command)
+
+            2. In Chrome, open chrome://extensions and turn on Developer mode.
+
+            3. Drag the chrome-extension folder from the Finder onto that page.
+
+            Do all three again if you move Sesame.
+            """
+        alert.addButton(withTitle: "Copy Command and Show Folder")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate()
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(command, forType: .string)
+            NSWorkspace.shared.activateFileViewerSelecting([folder])
+        }
+    }
+
     /// Writes every account to a passphrase-encrypted file the user chooses.
     func exportAccounts() {
         guard !accounts.isEmpty else {

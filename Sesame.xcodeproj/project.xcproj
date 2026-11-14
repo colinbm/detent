@@ -14,6 +14,7 @@
     { "kind": "folder", "path": "Sesame", "target-membership": [ "Sesame" ] },
     { "kind": "folder", "path": "sesame-cli", "target-membership": [ "sesame-cli" ] },
     { "kind": "folder", "path": "Shared", "target-membership": [ "Sesame", "sesame-cli" ] },
+    { "path": "chrome-extension", "type": "folder", "target-membership": [ { "build-phase": "Sesame/resources" } ] },
     {
       "kind": "group",
       "name": "Products",

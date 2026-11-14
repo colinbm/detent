@@ -3,10 +3,11 @@ import Foundation
 let usage = """
     usage: sesame [-n] <name>   print the current code for the matching account
            sesame list          list accounts
+           sesame chrome-setup  let the Sesame extension for Chrome fetch codes
 
     <name> matches the issuer, the account name or "issuer:name", ignoring case; failing an
     exact match, any unique substring will do. -n omits the trailing newline.
-    Use "sesame get <name>" for an account called "list". Accounts are managed in the Sesame app.
+    Use "sesame get <name>" for an account called "list" or "chrome-setup". Accounts are managed in the Sesame app.
     """
 
 func fail(_ message: String) -> Never {
@@ -35,6 +36,10 @@ func printCode(for query: String) {
 
 var newline = true
 var args = Array(CommandLine.arguments.dropFirst())
+if NativeHost.isInvocation(args) {
+    NativeHost.run(origin: args[0])
+    exit(0)
+}
 if let index = args.firstIndex(of: "-n") {
     newline = false
     args.remove(at: index)
@@ -44,6 +49,11 @@ do {
     switch (args.first, args.count) {
     case ("list", 1):
         for account in try AccountStore.load() { print(account.label) }
+
+    case ("chrome-setup", 1):
+        let written = try NativeHost.install()
+        if written.isEmpty { fail("no Chrome, or other Chromium browser, has been run on this Mac") }
+        for file in written { print("Wrote \(file.path)") }
 
     case ("get", 2):
         printCode(for: args[1])
