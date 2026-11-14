@@ -12,7 +12,7 @@ import Security
 nonisolated enum CloudStore {
     private static let baseQuery: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "com.colinbm.sesame.account",
+        kSecAttrService as String: "com.colinbm.detent.account",
         kSecUseDataProtectionKeychain as String: true,
         kSecAttrSynchronizable as String: true,
     ]
@@ -51,12 +51,12 @@ nonisolated enum CloudStore {
     }
 
     static func save(_ account: Account) throws {
-        try write(JSONEncoder().encode(account), id: account.id, label: "Sesame: \(account.label)")
+        try write(JSONEncoder().encode(account), id: account.id, label: "Detent: \(account.label)")
     }
 
     /// Replaces the account with a deletion record, which syncs like any other change.
     static func remove(id: Account.ID) throws {
-        try write(JSONEncoder().encode(Deleted()), id: id, label: "Sesame: deleted account")
+        try write(JSONEncoder().encode(Deleted()), id: id, label: "Detent: deleted account")
     }
 
     private static func write(_ data: Data, id: Account.ID, label: String) throws {

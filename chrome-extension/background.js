@@ -10,7 +10,7 @@ function syncContentScript() {
     if (matches.length) {
       await chrome.scripting.registerContentScripts([{ id: 'fill', js: ['content.js'], matches }]);
     }
-  }).catch((error) => console.error('Sesame:', error));
+  }).catch((error) => console.error('Detent:', error));
   return syncing;
 }
 
@@ -41,12 +41,12 @@ async function codeFor(tab) {
   const rule = findRule(await loadRules(), new URL(tab.url).hostname);
   if (!rule) return {};
 
-  const reply = await askSesame({ cmd: 'code', id: rule.account });
+  const reply = await askDetent({ cmd: 'code', id: rule.account });
   if (reply.error) {
     // Nothing on the page says why no code appeared, so flag it on the toolbar button.
     chrome.action.setBadgeText({ tabId: tab.id, text: '!' });
     chrome.action.setBadgeBackgroundColor({ tabId: tab.id, color: '#d33' });
-    chrome.action.setTitle({ tabId: tab.id, title: `Sesame: ${reply.error}` });
+    chrome.action.setTitle({ tabId: tab.id, title: `Detent: ${reply.error}` });
     return {};
   }
   return { code: reply.code, remaining: reply.remaining, submit: rule.submit };

@@ -1,12 +1,12 @@
 // Shared by the service worker and the popup.
 //
 // A rule is { host, account, label, submit }: on `host` and its subdomains, fill in the code
-// for the Sesame account with id `account` (shown as `label`), then submit the form if `submit`.
+// for the Detent account with id `account` (shown as `label`), then submit the form if `submit`.
 
-const NATIVE_HOST = 'com.colinbm.sesame';
+const NATIVE_HOST = 'com.colinbm.detent';
 
-/** Asks the `sesame` tool. Resolves to its reply, or to { error } if it could not be reached. */
-async function askSesame(message) {
+/** Asks the `detent` tool. Resolves to its reply, or to { error } if it could not be reached. */
+async function askDetent(message) {
   try {
     return await chrome.runtime.sendNativeMessage(NATIVE_HOST, message);
   } catch (error) {

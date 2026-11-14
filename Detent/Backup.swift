@@ -4,10 +4,10 @@ import Foundation
 
 /// A passphrase-encrypted file holding every account, for backups and moving between machines.
 nonisolated enum Backup {
-    static let fileExtension = "sesamebackup"
+    static let fileExtension = "detentbackup"
 
     private struct File: Codable {
-        var format = "sesame-backup"
+        var format = "detent-backup"
         var version = 1
         var iterations: Int
         var salt: Data
@@ -21,7 +21,7 @@ nonisolated enum Backup {
 
         var errorDescription: String? {
             switch self {
-            case .notABackup: "That file is not a Sesame backup."
+            case .notABackup: "That file is not a Detent backup."
             case .wrongPassphrase: "The passphrase is wrong, or the backup is damaged."
             }
         }
@@ -38,7 +38,7 @@ nonisolated enum Backup {
 
     static func decrypt(_ data: Data, passphrase: String) throws -> [Account] {
         guard let file = try? JSONDecoder().decode(File.self, from: data),
-              file.format == "sesame-backup", file.version == 1,
+              ["detent-backup", "sesame-backup"].contains(file.format), file.version == 1,
               (1...10_000_000).contains(file.iterations)
         else { throw Failure.notABackup }
 

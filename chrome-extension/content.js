@@ -1,14 +1,14 @@
 // Runs on the sites that have a rule. Watches for a field that wants a two-factor code and
 // fills it in. The code is only asked for once such a field is on the page.
 (() => {
-  if (globalThis.sesameLoaded) return;
-  globalThis.sesameLoaded = true;
+  if (globalThis.detentLoaded) return;
+  globalThis.detentLoaded = true;
 
   const HINT = /otp|2fa|mfa|one[-_ ]?time|verif|two[-_ ]?(factor|step)|authenticat(or|ion)[-_ ]?(code|app)|(security|auth|login|access)[-_ ]?code|passcode/i;
   const TEXT_TYPES = ['text', 'tel', 'number', 'password'];
   const NOT_A_CODE = ['username', 'email', 'current-password', 'new-password'];
   // When the code last filled in on this tab runs out. Kept across reloads.
-  const USED_UNTIL = 'sesame-used-until';
+  const USED_UNTIL = 'detent-used-until';
 
   const tried = new WeakSet();
   let busy = false;

@@ -106,7 +106,7 @@ struct ContentView: View {
                     Button("Install Command Line Tool…") { model.installCommandLineTool() }
                     Button("Set Up Chrome Extension…") { model.setUpChromeExtension() }
                     Divider()
-                    Button("Quit Sesame") { NSApplication.shared.terminate(nil) }
+                    Button("Quit Detent") { NSApplication.shared.terminate(nil) }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }

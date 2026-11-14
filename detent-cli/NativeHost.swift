@@ -1,10 +1,10 @@
 import Foundation
 
-/// The Chrome side of the tool. The Sesame extension reaches it through native messaging:
-/// Chrome starts `sesame` with the calling extension's origin as its first argument, then
+/// The Chrome side of the tool. The Detent extension reaches it through native messaging:
+/// Chrome starts `detent` with the calling extension's origin as its first argument, then
 /// exchanges JSON messages over stdin and stdout, each prefixed with a 32-bit length.
 nonisolated enum NativeHost {
-    static let name = "com.colinbm.sesame"
+    static let name = "com.colinbm.detent"
     /// Fixed by the "key" in the extension's manifest.json.
     static let extensionOrigin = "chrome-extension://pbgaheeaiiddegjmogimabnlpioggiko/"
 
@@ -18,7 +18,7 @@ nonisolated enum NativeHost {
         // Chrome only starts hosts for origins the manifest allows; this covers a manifest
         // someone has edited to let another extension in.
         guard origin == extensionOrigin else {
-            write(["error": "This extension may not use Sesame."])
+            write(["error": "This extension may not use Detent."])
             return
         }
         while let message = read() {
@@ -36,7 +36,7 @@ nonisolated enum NativeHost {
             case "code":
                 guard let id = message["id"] as? String,
                       let account = accounts.first(where: { $0.id.uuidString == id })
-                else { return ["error": "That account is no longer in Sesame."] }
+                else { return ["error": "That account is no longer in Detent."] }
                 let now = Date()
                 return [
                     "code": account.code(at: now),
@@ -84,7 +84,7 @@ nonisolated extension NativeHost {
         let manifest = try JSONSerialization.data(
             withJSONObject: [
                 "name": name,
-                "description": "Sesame two-factor codes",
+                "description": "Detent two-factor codes",
                 "path": tool.path,
                 "type": "stdio",
                 "allowed_origins": [extensionOrigin],

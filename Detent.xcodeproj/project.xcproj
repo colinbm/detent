@@ -11,27 +11,27 @@
     ],
   },
   "files": [
-    { "kind": "folder", "path": "Sesame", "target-membership": [ "Sesame" ] },
-    { "kind": "folder", "path": "sesame-cli", "target-membership": [ "sesame-cli" ] },
-    { "kind": "folder", "path": "Shared", "target-membership": [ "Sesame", "sesame-cli" ] },
-    { "path": "chrome-extension", "type": "folder", "target-membership": [ { "build-phase": "Sesame/resources" } ] },
+    { "kind": "folder", "path": "Detent", "target-membership": [ "Detent" ] },
+    { "kind": "folder", "path": "detent-cli", "target-membership": [ "detent-cli" ] },
+    { "kind": "folder", "path": "Shared", "target-membership": [ "Detent", "detent-cli" ] },
+    { "path": "chrome-extension", "type": "folder", "target-membership": [ { "build-phase": "Detent/resources" } ] },
     {
       "kind": "group",
       "name": "Products",
       "children": [
-        { "path": "<PRODUCTS>/Sesame.app", "id": "000000000000000000000120", "type": "wrapper.application", "index": false },
-        { "path": "<PRODUCTS>/sesame", "id": "000000000000000000000121", "type": "compiled.mach-o.executable", "index": false, "target-membership": [ { "build-phase": "Sesame/copy/Embed Command Line Tool", "code-sign-on-copy": true } ] },
+        { "path": "<PRODUCTS>/Detent.app", "id": "000000000000000000000120", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/detent", "id": "000000000000000000000121", "type": "compiled.mach-o.executable", "index": false, "target-membership": [ { "build-phase": "Detent/copy/Embed Command Line Tool", "code-sign-on-copy": true } ] },
       ],
     },
   ],
   "targets": [
     {
-      "name": "Sesame",
+      "name": "Detent",
       "id": "000000000000000100000000",
-      "product": "Products/Sesame.app",
+      "product": "Products/Detent.app",
       "product-type": "application",
       "dependencies": [
-        "sesame-cli",
+        "detent-cli",
       ],
       "build-phases": [
         "compile-sources",
@@ -46,7 +46,7 @@
       ],
       "build-settings": {
         "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
-        "CODE_SIGN_ENTITLEMENTS": "Config/Sesame.entitlements",
+        "CODE_SIGN_ENTITLEMENTS": "Config/Detent.entitlements",
         "CODE_SIGN_STYLE": "Automatic",
         "CURRENT_PROJECT_VERSION": "8",
         "ENABLE_APP_SANDBOX": "YES",
@@ -57,7 +57,7 @@
         "INFOPLIST_KEY_LSUIElement": "YES",
         "LD_RUNPATH_SEARCH_PATHS": "@executable_path/../Frameworks",
         "MARKETING_VERSION": "1.3.1",
-        "PRODUCT_BUNDLE_IDENTIFIER": "com.colinbm.sesame",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.colinbm.detent",
         "PRODUCT_NAME": "$(TARGET_NAME)",
         "REGISTER_APP_GROUPS": "YES",
         "SDKROOT": "auto",
@@ -70,9 +70,9 @@
         "SWIFT_VERSION": "5.0",
       },
     }, {
-      "name": "sesame-cli",
+      "name": "detent-cli",
       "id": "000000000000000200000000",
-      "product": "Products/sesame",
+      "product": "Products/detent",
       "product-type": "tool",
       "build-phases": [
         "compile-sources",
@@ -80,8 +80,8 @@
       ],
       "build-settings": {
         "CODE_SIGN_STYLE": "Automatic",
-        "PRODUCT_MODULE_NAME": "SesameCLI",
-        "PRODUCT_NAME": "sesame",
+        "PRODUCT_MODULE_NAME": "DetentCLI",
+        "PRODUCT_NAME": "detent",
         "SDKROOT": "auto",
         "SKIP_INSTALL": "YES",
         "SUPPORTED_PLATFORMS": "macosx",

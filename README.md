@@ -1,31 +1,31 @@
-<img src="Sesame/Assets.xcassets/AppIcon.appiconset/icon-128.png" width="96" alt="Sesame icon">
+<img src="Detent/Assets.xcassets/AppIcon.appiconset/icon-128.png" width="96" alt="Detent icon">
 
-# Sesame
+# Detent
 
 A two-factor authentication app for the macOS menu bar, with a command line tool that prints codes so your terminal can enter them for you.
 
-- **Scan from the screen.** Put a 2FA setup QR code anywhere on any display and Sesame finds it. No camera, no cropping.
+- **Scan from the screen.** Put a 2FA setup QR code anywhere on any display and Detent finds it. No camera, no cropping.
 - **Or paste.** Add an account from an `otpauth://` link or the bare secret key.
 - **Live codes.** Each account shows its current code and a countdown; click to copy.
-- **`sesame` command.** `sesame github` prints the current code for the matching account.
+- **`detent` command.** `detent github` prints the current code for the matching account.
 - **iCloud sync and backups.** Optionally keep accounts in iCloud Keychain, and export them to an encrypted file.
 
 ## Install
 
-Download the latest zip from [Releases](https://github.com/colinbm/sesame/releases/latest), unzip it, and move `Sesame.app` to Applications. The app is signed and notarized.
+Download the latest zip from [Releases](https://github.com/colinbm/detent/releases/latest), unzip it, and move `Detent.app` to Applications. The app is signed and notarized.
 
 Requires macOS 14 or later, on Apple silicon or Intel.
 
-The first scan asks for Screen Recording permission: allow Sesame under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again.
+The first scan asks for Screen Recording permission: allow Detent under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again.
 
 ## Command line tool
 
 The tool ships inside the app. Choose **Install Command Line Tool…** from the **…** menu to copy a command that links it into `/usr/local/bin`, then paste that into a terminal.
 
 ```
-sesame <name>   print the current code for the matching account
-sesame list     list accounts
-sesame chrome-setup   let the Chrome extension fetch codes
+detent <name>   print the current code for the matching account
+detent list     list accounts
+detent chrome-setup   let the Chrome extension fetch codes
 ```
 
 Accounts are added and removed in the app.
@@ -42,38 +42,38 @@ In Settings › Profiles › Advanced › Triggers, add a trigger:
 | --- | --- |
 | Regular expression | the prompt to react to, such as `Verification code:` |
 | Action | Run Coprocess |
-| Parameters | `/usr/local/bin/sesame github` |
+| Parameters | `/usr/local/bin/detent github` |
 
 The tool's output is typed into the session, and the trailing newline submits it.
 
 ## Chrome extension
 
-The extension fills in the code when a site you have chosen asks for one. It gets each code from the `sesame` tool, so the secrets stay in the keychain and the extension never sees them.
+The extension fills in the code when a site you have chosen asks for one. It gets each code from the `detent` tool, so the secrets stay in the keychain and the extension never sees them.
 
 It ships inside the app. Chrome only installs packed extensions from its own store, so this one is loaded as a folder:
 
 1. Choose **Set Up Chrome Extension…** from the **…** menu, then **Copy Command and Show Folder**.
-2. Paste the command into a terminal. It runs `sesame chrome-setup`, which tells Chrome where the tool is. It also covers Chrome Beta and Canary, Chromium, Brave, Edge, Vivaldi and Arc.
+2. Paste the command into a terminal. It runs `detent chrome-setup`, which tells Chrome where the tool is. It also covers Chrome Beta and Canary, Chromium, Brave, Edge, Vivaldi and Arc.
 3. In Chrome, open `chrome://extensions`, turn on **Developer mode**, and drag the `chrome-extension` folder from the Finder onto the page.
-4. Open the site's sign-in page, click the Sesame toolbar button, choose the account and click **Fill codes on this site**. Chrome asks you to allow Sesame on that site.
+4. Open the site's sign-in page, click the Detent toolbar button, choose the account and click **Fill codes on this site**. Chrome asks you to allow Detent on that site.
 
-Chrome loads the extension from inside the app, so updating Sesame updates it too, once Chrome restarts. If you move Sesame, do steps 1 to 3 again.
+Chrome loads the extension from inside the app, so updating Detent updates it too, once Chrome restarts. If you move Detent, do steps 1 to 3 again.
 
-From then on, when a page on that site or its subdomains shows a field for a two-factor code, Sesame fills it in. Tick **Submit the form after filling** to have it press the button as well. The same popup lists the sites you have set up and removes them.
+From then on, when a page on that site or its subdomains shows a field for a two-factor code, Detent fills it in. Tick **Submit the form after filling** to have it press the button as well. The same popup lists the sites you have set up and removes them.
 
-The extension can only read pages on the sites you add, and only asks for a code once a code field is on the page. A code is never entered twice in the same tab: if a page asks again, Sesame waits for the next one. If no code appears, the toolbar button shows a red **!**; hover over it for the reason. Fields inside embedded frames are not filled.
+The extension can only read pages on the sites you add, and only asks for a code once a code field is on the page. A code is never entered twice in the same tab: if a page asks again, Detent waits for the next one. If no code appears, the toolbar button shows a red **!**; hover over it for the reason. Fields inside embedded frames are not filled.
 
 ## Where secrets are stored
 
-By default, accounts live in a single item, "Sesame accounts", in your login keychain. They stay on this Mac.
+By default, accounts live in a single item, "Detent accounts", in your login keychain. They stay on this Mac.
 
 ### iCloud sync
 
-Turn on **Sync with iCloud Keychain** in the **…** menu to keep accounts in iCloud Keychain instead, end-to-end encrypted by Apple and shared with your other Macs running Sesame. It needs iCloud Keychain switched on in System Settings.
+Turn on **Sync with iCloud Keychain** in the **…** menu to keep accounts in iCloud Keychain instead, end-to-end encrypted by Apple and shared with your other Macs running Detent. It needs iCloud Keychain switched on in System Settings.
 
 Turning it on never loses anything already on the Mac: accounts only on this Mac are uploaded, and if one shares an issuer and name with a different account in iCloud, both are kept and the local one gets a numbered name such as "me (2)". Deleting an account leaves a deletion record in iCloud, so other devices remove it too rather than mistaking it for one that has not synced yet.
 
-The app then keeps the local keychain item as a copy, because the `sesame` tool can only read that. The copy is refreshed whenever the app is opened and every few minutes while it runs, so turn on **Launch at Login** to keep the tool up to date with accounts added on other devices.
+The app then keeps the local keychain item as a copy, because the `detent` tool can only read that. The copy is refreshed whenever the app is opened and every few minutes while it runs, so turn on **Launch at Login** to keep the tool up to date with accounts added on other devices.
 
 ### Backups
 
@@ -83,12 +83,12 @@ Only time-based (TOTP) codes are supported.
 
 ## Building
 
-Open `Sesame.xcodeproj` in Xcode 27, or build from the command line:
+Open `Detent.xcodeproj` in Xcode 27, or build from the command line:
 
 ```
-xcodebuild -target Sesame -configuration Release build SYMROOT=build
+xcodebuild -target Detent -configuration Release build SYMROOT=build
 ```
 
-Building the app also builds the `sesame` tool and embeds it at `Sesame.app/Contents/Helpers/sesame`. Set your own development team in the project's build settings to sign it.
+Building the app also builds the `detent` tool and embeds it at `Detent.app/Contents/Helpers/detent`. Set your own development team in the project's build settings to sign it.
 
 The app icon is drawn by `Tools/make-icon.swift`.

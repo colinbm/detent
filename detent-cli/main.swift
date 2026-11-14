@@ -1,17 +1,17 @@
 import Foundation
 
 let usage = """
-    usage: sesame [-n] <name>   print the current code for the matching account
-           sesame list          list accounts
-           sesame chrome-setup  let the Sesame extension for Chrome fetch codes
+    usage: detent [-n] <name>   print the current code for the matching account
+           detent list          list accounts
+           detent chrome-setup  let the Detent extension for Chrome fetch codes
 
     <name> matches the issuer, the account name or "issuer:name", ignoring case; failing an
     exact match, any unique substring will do. -n omits the trailing newline.
-    Use "sesame get <name>" for an account called "list" or "chrome-setup". Accounts are managed in the Sesame app.
+    Use "detent get <name>" for an account called "list" or "chrome-setup". Accounts are managed in the Detent app.
     """
 
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write(Data("sesame: \(message)\n".utf8))
+    FileHandle.standardError.write(Data("detent: \(message)\n".utf8))
     exit(1)
 }
 

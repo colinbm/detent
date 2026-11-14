@@ -108,7 +108,7 @@ import ServiceManagement
         } catch {
             report("The screen could not be scanned", CGPreflightScreenCaptureAccess()
                 ? error.localizedDescription
-                : "Allow Sesame under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again.")
+                : "Allow Detent under System Settings › Privacy & Security › Screen & System Audio Recording, then scan again.")
             return
         }
 
@@ -147,22 +147,22 @@ import ServiceManagement
         }
     }
 
-    /// Shows the terminal command that links the bundled `sesame` tool into /usr/local/bin.
+    /// Shows the terminal command that links the bundled `detent` tool into /usr/local/bin.
     /// The app is sandboxed and that folder belongs to root, so it cannot create the link itself.
     func installCommandLineTool() {
-        let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/sesame")
+        let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/detent")
         let alert = NSAlert()
 
         if FileManager.default.isExecutableFile(atPath: tool.path) {
             let quoted = "'" + tool.path.replacingOccurrences(of: "'", with: "'\\''") + "'"
-            let command = "sudo mkdir -p /usr/local/bin && sudo ln -sf \(quoted) /usr/local/bin/sesame"
-            alert.messageText = "Install the sesame command"
+            let command = "sudo mkdir -p /usr/local/bin && sudo ln -sf \(quoted) /usr/local/bin/detent"
+            alert.messageText = "Install the detent command"
             alert.informativeText = """
-                Paste this into a terminal. It asks for your password, then links sesame into /usr/local/bin:
+                Paste this into a terminal. It asks for your password, then links detent into /usr/local/bin:
 
                 \(command)
 
-                Run it again if you move Sesame.
+                Run it again if you move Detent.
                 """
             alert.addButton(withTitle: "Copy Command")
             alert.addButton(withTitle: "Cancel")
@@ -173,7 +173,7 @@ import ServiceManagement
             }
         } else {
             alert.messageText = "Command line tool missing"
-            alert.informativeText = "This copy of Sesame does not contain the sesame tool."
+            alert.informativeText = "This copy of Detent does not contain the detent tool."
             NSApp.activate()
             alert.runModal()
         }
@@ -181,9 +181,9 @@ import ServiceManagement
 
     /// Walks through adding the Chrome extension, which ships inside the app. Chrome only takes
     /// extensions from outside its store as a folder loaded by hand, and the sandbox keeps the
-    /// app from telling Chrome where the `sesame` tool is, so the tool does that from a terminal.
+    /// app from telling Chrome where the `detent` tool is, so the tool does that from a terminal.
     func setUpChromeExtension() {
-        let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/sesame")
+        let tool = Bundle.main.bundleURL.appending(path: "Contents/Helpers/detent")
         let alert = NSAlert()
 
         // Built from bundleURL because resourceURL is relative, and the Finder ignores a request
@@ -194,7 +194,7 @@ import ServiceManagement
               FileManager.default.isExecutableFile(atPath: tool.path)
         else {
             alert.messageText = "Chrome extension missing"
-            alert.informativeText = "This copy of Sesame does not contain the Chrome extension."
+            alert.informativeText = "This copy of Detent does not contain the Chrome extension."
             NSApp.activate()
             alert.runModal()
             return
@@ -203,7 +203,7 @@ import ServiceManagement
         let command = "'" + tool.path.replacingOccurrences(of: "'", with: "'\\''") + "' chrome-setup"
         alert.messageText = "Set up the Chrome extension"
         alert.informativeText = """
-            1. Paste this into a terminal. It tells Chrome where Sesame is:
+            1. Paste this into a terminal. It tells Chrome where Detent is:
 
             \(command)
 
@@ -211,7 +211,7 @@ import ServiceManagement
 
             3. Drag the chrome-extension folder from the Finder onto that page.
 
-            Do all three again if you move Sesame.
+            Do all three again if you move Detent.
             """
         alert.addButton(withTitle: "Copy Command and Show Folder")
         alert.addButton(withTitle: "Cancel")
@@ -236,7 +236,7 @@ import ServiceManagement
         ) else { return }
 
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "Sesame Accounts.\(Backup.fileExtension)"
+        panel.nameFieldStringValue = "Detent Accounts.\(Backup.fileExtension)"
         panel.canCreateDirectories = true
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -253,7 +253,7 @@ import ServiceManagement
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
-        panel.message = "Choose a Sesame backup file."
+        panel.message = "Choose a Detent backup file."
         NSApp.activate()
         guard panel.runModal() == .OK, let url = panel.url else { return }
 

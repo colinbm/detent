@@ -42,7 +42,7 @@ async function showRules() {
       row.append(element('button', 'Allow', {
         className: 'quiet',
         type: 'button',
-        title: `Let Sesame fill codes on ${rule.host}`,
+        title: `Let Detent fill codes on ${rule.host}`,
         onclick: () => requestAccess(rule.host).then(showRules),
       }));
     }
@@ -53,14 +53,14 @@ async function showRules() {
 }
 
 async function showAccounts() {
-  const reply = await askSesame({ cmd: 'list' });
+  const reply = await askDetent({ cmd: 'list' });
   if (reply.unreachable) {
-    showProblem('Chrome cannot reach Sesame. Run ', element('code', 'sesame chrome-setup'),
+    showProblem('Chrome cannot reach Detent. Run ', element('code', 'detent chrome-setup'),
       ` in a terminal, then open this again. (${reply.error})`);
   } else if (reply.error) {
     showProblem(reply.error);
   } else if (reply.accounts.length === 0) {
-    showProblem('Sesame has no accounts yet. Add one in the app.');
+    showProblem('Detent has no accounts yet. Add one in the app.');
   }
   const accounts = reply.accounts ?? [];
   $('account').replaceChildren(...accounts.map((account) => new Option(account.label, account.id)));
