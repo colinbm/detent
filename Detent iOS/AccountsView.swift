@@ -41,8 +41,11 @@ struct AccountsView: View {
                     list
                 }
             }
-            .navigationTitle("Detent")
-            .toolbar { addMenu }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                brand
+                addMenu
+            }
         }
         .overlay(alignment: .bottom) { copiedBanner }
         // Keep codes out of the app switcher snapshot.
@@ -128,6 +131,32 @@ struct AccountsView: View {
         }
         .searchable(text: $search, prompt: "Search accounts")
         .refreshable { model.reload() }
+    }
+
+    /// The app's icon and name, small, opposite the add button.
+    @ToolbarContentBuilder private var brand: some ToolbarContent {
+        // Toolbars show only the icon of a label unless told otherwise.
+        let label = Label {
+            Text("Detent")
+                .font(.headline)
+        } icon: {
+            Image("Logo")
+                .resizable()
+                .frame(width: 28, height: 28)
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+        .labelStyle(.titleAndIcon)
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+
+        if #available(iOS 26.0, *) {
+            // A label, not a button, so no glass background behind it.
+            ToolbarItem(placement: .topBarLeading) { label }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .topBarLeading) { label }
+        }
     }
 
     @ToolbarContentBuilder private var addMenu: some ToolbarContent {
