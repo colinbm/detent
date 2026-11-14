@@ -3,12 +3,17 @@ import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
-// 1024pt macOS icon: a knurled dial clicked into its top detent, ringed by 30 ticks
+// 1024pt icon: a knurled dial clicked into its top detent, ringed by 30 ticks
 // (one per second of a code's life) on a deep slate rounded square.
+//
+// usage: make-icon [--ios] <output.png>
+// --ios draws the same artwork full-bleed and opaque, as iOS masks the corners itself.
+let ios = CommandLine.arguments.contains("--ios")
+let outputPath = CommandLine.arguments.dropFirst().first { $0 != "--ios" }!
 let size = 1024
 let space = CGColorSpace(name: CGColorSpace.sRGB)!
 let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
-                    space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+                    space: space, bitmapInfo: (ios ? CGImageAlphaInfo.noneSkipLast : .premultipliedLast).rawValue)!
 
 func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
     CGColor(colorSpace: space, components: [
@@ -33,21 +38,26 @@ func polar(_ r: CGFloat, _ a: CGFloat) -> CGPoint {
 let c = CGPoint(x: 512, y: 500)
 let accent: UInt32 = 0xFFB23E
 
-// Background plate, on Apple's macOS icon grid (824pt square, 100pt margin).
-let plate = CGPath(roundedRect: CGRect(x: 100, y: 100, width: 824, height: 824),
-                   cornerWidth: 186, cornerHeight: 186, transform: nil)
-ctx.saveGState()
-ctx.setShadow(offset: CGSize(width: 0, height: -12), blur: 28, color: color(0x000000, 0.3))
-ctx.addPath(plate)
-ctx.setFillColor(color(0x1C2638))
-ctx.fillPath()
-ctx.restoreGState()
+if ios {
+    // The background fills the canvas; the dial keeps its size, which leaves room for the mask.
+    linear(0x33435F, 0x121928, from: 1024, to: 0)
+} else {
+    // Background plate, on Apple's macOS icon grid (824pt square, 100pt margin).
+    let plate = CGPath(roundedRect: CGRect(x: 100, y: 100, width: 824, height: 824),
+                       cornerWidth: 186, cornerHeight: 186, transform: nil)
+    ctx.saveGState()
+    ctx.setShadow(offset: CGSize(width: 0, height: -12), blur: 28, color: color(0x000000, 0.3))
+    ctx.addPath(plate)
+    ctx.setFillColor(color(0x1C2638))
+    ctx.fillPath()
+    ctx.restoreGState()
 
-ctx.saveGState()
-ctx.addPath(plate)
-ctx.clip()
-linear(0x33435F, 0x121928, from: 924, to: 100)
-ctx.restoreGState()
+    ctx.saveGState()
+    ctx.addPath(plate)
+    ctx.clip()
+    linear(0x33435F, 0x121928, from: 924, to: 100)
+    ctx.restoreGState()
+}
 
 // Tick ring: 30 ticks, every fifth one longer. The top position is the detent pointer.
 ctx.setLineCap(.round)
@@ -135,7 +145,7 @@ ctx.clip()
 linear(0xFFC861, 0xE88A12, from: groove.maxY, to: groove.minY)
 ctx.restoreGState()
 
-let out = URL(fileURLWithPath: CommandLine.arguments[1])
+let out = URL(fileURLWithPath: outputPath)
 let dest = CGImageDestinationCreateWithURL(out as CFURL, UTType.png.identifier as CFString, 1, nil)!
 CGImageDestinationAddImage(dest, ctx.makeImage()!, nil)
 CGImageDestinationFinalize(dest)

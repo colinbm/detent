@@ -7,8 +7,9 @@ import Security
 /// Removing an account leaves a deletion record in its place, so that other devices can tell
 /// "deleted" apart from "not synced yet".
 ///
-/// Only the app can use this store, because it needs the keychain access group entitlement.
-/// The command line tool reads the local copy that `AppModel` keeps in step with it.
+/// Only the Mac and iOS apps can use this store, because it needs the keychain access group
+/// entitlement, which both carry. The command line tool reads the local copy that the Mac app's
+/// `AppModel` keeps in step with it.
 nonisolated enum CloudStore {
     private static let baseQuery: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
