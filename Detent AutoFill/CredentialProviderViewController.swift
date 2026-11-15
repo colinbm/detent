@@ -21,6 +21,29 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         Task { await complete(with: account) }
     }
 
+    /// The system wants interface for a request it could not complete silently.
+    override func prepareInterfaceToProvideCredential(for credentialRequest: any ASCredentialRequest) {
+        guard credentialRequest.type == .oneTimeCode else {
+            showUnsupported()
+            return
+        }
+        provideCredentialWithoutUserInteraction(for: credentialRequest)
+    }
+
+    // Detent has no passwords or passkeys, but Safari can still offer it on those fields. Every
+    // request needs an answer, or Safari waits on it indefinitely, so explain and step aside.
+
+    override func prepareCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
+        showUnsupported()
+    }
+
+    override func prepareCredentialList(
+        for serviceIdentifiers: [ASCredentialServiceIdentifier],
+        requestParameters: ASPasskeyCredentialRequestParameters
+    ) {
+        showUnsupported()
+    }
+
     /// The user chose Detent from the AutoFill menu, so let them pick the account.
     override func prepareOneTimeCodeCredentialList(for serviceIdentifiers: [ASCredentialServiceIdentifier]) {
         let accounts = ExtensionAccounts.load()
@@ -62,7 +85,13 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         _ = await extensionContext.completeOneTimeCodeRequest(using: ASOneTimeCodeCredential(code: account.code()))
     }
 
-    private func show(_ view: some View) {
+    private func showUnsupported() {
+        show(Unsupported { [weak self] in
+            self?.extensionContext.cancelRequest(withError: ASExtensionError(.userCanceled))
+        }, size: CGSize(width: 340, height: 200))
+    }
+
+    private func show(_ view: some View, size: CGSize = CGSize(width: 420, height: 460)) {
         let host = HostingController(rootView: view)
         addChild(host)
         host.view.frame = self.view.bounds
@@ -73,7 +102,32 @@ final class CredentialProviderViewController: ASCredentialProviderViewController
         #else
         host.view.autoresizingMask = [.width, .height]
         self.view.addSubview(host.view)
-        preferredContentSize = NSSize(width: 420, height: 460)
+        preferredContentSize = size
         #endif
+    }
+}
+
+/// Shown when Detent is asked for something it does not have, such as a password.
+private struct Unsupported: View {
+    let dismiss: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "lock.rotation")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+            Text("Detent only fills verification codes")
+                .font(.headline)
+                .multilineTextAlignment(.center)
+            Text("Choose Detent from AutoFill on the field that asks for the code.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button("OK", action: dismiss)
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

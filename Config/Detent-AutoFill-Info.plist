@@ -10,6 +10,10 @@
 			<dict>
 				<key>ProvidesOneTimeCodes</key>
 				<true/>
+				<key>ProvidesPasskeys</key>
+				<false/>
+				<key>ProvidesPasswords</key>
+				<false/>
 				<key>ShowsConfigurationUI</key>
 				<true/>
 			</dict>
