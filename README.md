@@ -117,3 +117,5 @@ xcodebuild -target Detent -configuration Release build SYMROOT=build
 Building the app also builds the `detent` tool and embeds it at `Detent.app/Contents/Helpers/detent`. Set your own development team in the project's build settings to sign it.
 
 The app icon is drawn by `Tools/make-icon.swift`.
+
+`scripts/testflight.sh` uploads an iOS build. `scripts/appstore.rb` fills in the App Store listing from `AppStore/metadata.json` and uploads the screenshots in `AppStore/screenshots`, which come from a Debug build launched with `-DetentDemo YES` to show made-up accounts.

@@ -1,0 +1,18 @@
+{
+  "locale": "en-GB",
+  "subtitle": "2FA codes with AutoFill",
+  "promotionalText": "Verification codes that fill themselves in. Detent offers the right code above the keyboard, and shares your accounts with Detent on your Mac through iCloud Keychain.",
+  "keywords": "2fa,totp,authenticator,two-factor,otp,verification code,autofill,mfa,one-time,security,qr code",
+  "description": "Detent keeps your two-factor authentication codes, and enters them for you.\n\nAUTOFILL\nTurn on Detent in Settings › General › AutoFill & Passwords. When a site or app asks for a verification code, tap the field and pick the account once. From then on Detent offers that account's code above the keyboard on that site, ready in one tap.\n\nADD ACCOUNTS YOUR WAY\n• Scan a 2FA setup QR code with the camera\n• Choose a photo or screenshot of one\n• Paste an otpauth:// link or type the secret key\n\nLIVE CODES\nEvery account shows its current code and a countdown ring. Tap to copy; the code leaves the clipboard on its own after two minutes.\n\nSITES\nEach account remembers the sites it signs in to, so AutoFill suggests the right one. Swipe on an account to see or change them.\n\nWORKS WITH YOUR MAC\nDetent for Mac lives in the menu bar, finds QR codes anywhere on screen, and has a command line tool and Chrome extension. Turn on Sync with iCloud Keychain there and the same accounts appear on your iPhone and iPad.\n\nPRIVATE BY DESIGN\nYour secrets are stored in iCloud Keychain, end-to-end encrypted by Apple. Detent has no servers, no accounts, no analytics and no ads, and it never connects to the internet.\n\nDetent supports time-based (TOTP) codes.",
+  "supportUrl": "https://github.com/colinbm/detent",
+  "marketingUrl": "https://github.com/colinbm/detent",
+  "privacyPolicyUrl": "https://github.com/colinbm/detent/blob/main/PRIVACY.md",
+  "copyright": "2026 Colin Burn-Murdoch",
+  "primaryCategory": "UTILITIES",
+  "secondaryCategory": "PRODUCTIVITY",
+  "reviewNotes": "Detent needs no sign-in. To try it, tap + › Enter Key and enter any base32 key, such as JBSWY3DPEHPK3PXP, with a name; the account shows a live code. To test AutoFill, turn on Detent in Settings › General › AutoFill & Passwords, open a site's verification code field in Safari, choose AutoFill › Passwords and pick the account.",
+  "screenshots": {
+    "APP_IPHONE_67": "AppStore/screenshots/iphone",
+    "APP_IPAD_PRO_3GEN_129": "AppStore/screenshots/ipad"
+  }
+}

@@ -18,7 +18,11 @@ struct AccountsView: View {
     @State private var copyCount = 0
 
     private var cameraAvailable: Bool {
-        DataScannerViewController.isSupported && DataScannerViewController.isAvailable
+        #if DEBUG
+        // The simulator has no camera, but screenshots should show the menu as a phone does.
+        if AccountsModel.demoAccounts != nil { return true }
+        #endif
+        return DataScannerViewController.isSupported && DataScannerViewController.isAvailable
     }
 
     private var shown: [Account] {

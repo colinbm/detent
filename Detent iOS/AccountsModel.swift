@@ -20,6 +20,9 @@ struct Problem: Identifiable {
 
     /// `reportingFailure` is off for background refreshes, which would otherwise repeat the alert.
     func reload(reportingFailure: Bool = true) {
+        #if DEBUG
+        if let demo = Self.demoAccounts { accounts = demo; return }
+        #endif
         do {
             accounts = try CloudStore.load().accounts
             if accounts != registered {
@@ -31,6 +34,28 @@ struct Problem: Identifiable {
             if reportingFailure { problem = Problem(title: "Accounts could not be loaded", detail: error.localizedDescription) }
         }
     }
+
+    #if DEBUG
+    /// Launching with `-DetentDemo YES` shows these made-up accounts instead of the keychain's,
+    /// for App Store screenshots. Debug builds only.
+    static let demoAccounts: [Account]? = {
+        guard UserDefaults.standard.bool(forKey: "DetentDemo") else { return nil }
+        let entries: [(String, String)] = [
+            ("GitHub", "octocat"), ("Google", "jo.bloggs@gmail.com"), ("Amazon.com", "jo.bloggs@gmail.com"),
+            ("AWS", "jo@example.com"), ("Cloudflare", "jo@example.com"), ("Dropbox", "jo.bloggs@gmail.com"),
+            ("1Password", "Jo Bloggs"), ("Stripe", "jo@example.com"), ("Microsoft", "jo@outlook.com"),
+            ("Discord", "jobloggs"),
+        ]
+        let sites = ["GitHub": ["github.com"], "Google": ["google.com", "accounts.google.com"],
+                     "Amazon.com": ["amazon.com", "amazon.co.uk"], "AWS": ["aws.amazon.com", "signin.aws.amazon.com"]]
+        return entries.enumerated().map { index, entry in
+            var account = Account(issuer: entry.0, name: entry.1,
+                                  secret: Data((0..<20).map { UInt8(($0 * 37 + index * 101) % 256) }))
+            account.setDomains(sites[entry.0] ?? [])
+            return account
+        }
+    }()
+    #endif
 
     /// Saves `account`, replacing any account with the same issuer and name, as the Mac app does.
     private func store(_ account: Account) throws {
